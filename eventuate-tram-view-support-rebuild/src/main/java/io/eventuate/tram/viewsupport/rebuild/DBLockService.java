@@ -1,10 +1,9 @@
-package io.eventuate.viewsupport.rebuild;
+package io.eventuate.tram.viewsupport.rebuild;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.PostgreSQL82Dialect;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.transaction.Transactional;
@@ -17,11 +16,13 @@ import java.util.stream.Collectors;
 
 public class DBLockService {
 
-  @Autowired
   private JdbcTemplate jdbcTemplate;
-
-  @Autowired
   private DBDialectDeterminer dbDialectDeterminer;
+
+  public DBLockService(JdbcTemplate jdbcTemplate, DBDialectDeterminer dbDialectDeterminer) {
+    this.jdbcTemplate = jdbcTemplate;
+    this.dbDialectDeterminer = dbDialectDeterminer;
+  }
 
   @Transactional
   public <T> T withLockedTables(LockSpecification lockSpecification, Supplier<T> callback) {
@@ -31,14 +32,6 @@ public class DBLockService {
     } finally {
       executeUnlockQueryIfNecessary();
     }
-  }
-
-  public void setJdbcTemplate(JdbcTemplate jdbcTemplate) {
-    this.jdbcTemplate = jdbcTemplate;
-  }
-
-  public void setDbDialectDeterminer(DBDialectDeterminer dbDialectDeterminer) {
-    this.dbDialectDeterminer = dbDialectDeterminer;
   }
 
   private boolean isMysql() {

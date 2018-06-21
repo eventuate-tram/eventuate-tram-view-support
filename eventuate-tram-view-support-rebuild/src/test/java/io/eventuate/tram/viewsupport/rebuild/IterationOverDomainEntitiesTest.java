@@ -1,4 +1,4 @@
-package io.eventuate.viewsupport.rebuild;
+package io.eventuate.tram.viewsupport.rebuild;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -56,7 +56,11 @@ public class IterationOverDomainEntitiesTest {
   }
 
   public void testIteration(int elements) {
-    DomainSnapshotExportService domainSnapshotExportService = new DomainSnapshotExportService(TestEntity.class,
+    DomainSnapshotExportService domainSnapshotExportService = new DomainSnapshotExportService(null,
+            null,
+            null,
+            null,
+            TestEntity.class,
             testRepository, null, null, snapshotterConfigurationProperties.getDomainRepositoryPageSize());
 
     testRepository.deleteAll();

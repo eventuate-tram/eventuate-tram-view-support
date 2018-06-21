@@ -1,4 +1,4 @@
-package io.eventuate.viewsupport.rebuild;
+package io.eventuate.tram.viewsupport.rebuild;
 
 import org.apache.commons.lang.StringUtils;
 import org.aspectj.util.FileUtil;

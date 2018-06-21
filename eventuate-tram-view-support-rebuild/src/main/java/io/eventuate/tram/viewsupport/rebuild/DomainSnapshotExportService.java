@@ -1,4 +1,4 @@
-package io.eventuate.viewsupport.rebuild;
+package io.eventuate.tram.viewsupport.rebuild;
 
 import com.google.common.collect.ImmutableMap;
 import io.eventuate.javaclient.commonimpl.JSonMapper;
@@ -12,7 +12,6 @@ import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.PartitionInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.repository.PagingAndSortingRepository;
@@ -29,16 +28,9 @@ public class DomainSnapshotExportService<T> {
 
   protected PagingAndSortingRepository<T, Long> domainRepository;
 
-  @Autowired
   private DomainEventPublisher domainEventPublisher;
-
-  @Autowired
   private EventuateKafkaProducer eventuateKafkaProducer;
-
-  @Autowired
   private DBLockService dbLockService;
-
-  @Autowired
   private IdGenerator idGenerator;
 
   private Class<T> domainClass;
@@ -46,12 +38,20 @@ public class DomainSnapshotExportService<T> {
   private DBLockService.TableSpec domainTableSpec;
   private int iterationPageSize;
 
-  public DomainSnapshotExportService(Class<T> domainClass,
+  public DomainSnapshotExportService(DomainEventPublisher domainEventPublisher,
+                                     EventuateKafkaProducer eventuateKafkaProducer,
+                                     DBLockService dbLockService,
+                                     IdGenerator idGenerator,
+                                     Class<T> domainClass,
                                      PagingAndSortingRepository<T, Long> domainRepository,
                                      Function<T, DomainEventWithEntityId> domainEntityToDomainEventConverter,
                                      DBLockService.TableSpec domainTableSpec,
                                      int iterationPageSize) {
 
+    this.domainEventPublisher = domainEventPublisher;
+    this.eventuateKafkaProducer = eventuateKafkaProducer;
+    this.dbLockService = dbLockService;
+    this.idGenerator = idGenerator;
     this.domainClass = domainClass;
     this.domainRepository = domainRepository;
     this.domainEntityToDomainEventConverter = domainEntityToDomainEventConverter;

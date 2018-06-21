@@ -1,4 +1,4 @@
-package io.eventuate.viewsupport.rebuild;
+package io.eventuate.tram.viewsupport.rebuild;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -9,7 +9,7 @@ public class DBLockServiceMySqlQueryTest {
 
   @Test
   public void testSingleTable() {
-    DBLockService dbLockService = new DBLockService();
+    DBLockService dbLockService = new DBLockService(null, null);
     DBLockService.TableSpec mainTableSpec = new DBLockService.TableSpec("TestTable1");
     DBLockService.LockSpecification lockSpecification = new DBLockService.LockSpecification(mainTableSpec, DBLockService.LockType.READ);
     String query = dbLockService.buildMySqlLockQuery(lockSpecification);
@@ -19,7 +19,7 @@ public class DBLockServiceMySqlQueryTest {
 
   @Test
   public void testSingleTableWithSynonym() {
-    DBLockService dbLockService = new DBLockService();
+    DBLockService dbLockService = new DBLockService(null, null);
     DBLockService.TableSpec mainTableSpec = new DBLockService.TableSpec("TestTable1", "t1");
     DBLockService.LockSpecification lockSpecification = new DBLockService.LockSpecification(mainTableSpec, DBLockService.LockType.WRITE);
     String query = dbLockService.buildMySqlLockQuery(lockSpecification);
@@ -29,7 +29,7 @@ public class DBLockServiceMySqlQueryTest {
 
   @Test
   public void test2Tables() {
-    DBLockService dbLockService = new DBLockService();
+    DBLockService dbLockService = new DBLockService(null, null);
     DBLockService.TableSpec mainTableSpec = new DBLockService.TableSpec("TestTable1");
     DBLockService.TableSpec additionalTableSpec = new DBLockService.TableSpec("TestTable2");
     DBLockService.LockSpecification lockSpecification = new DBLockService.LockSpecification(mainTableSpec,
@@ -42,7 +42,7 @@ public class DBLockServiceMySqlQueryTest {
 
   @Test
   public void testS2TablesWithSynonyms() {
-    DBLockService dbLockService = new DBLockService();
+    DBLockService dbLockService = new DBLockService(null, null);
     DBLockService.TableSpec mainTableSpec = new DBLockService.TableSpec("TestTable1", "t1");
     DBLockService.TableSpec additionalTableSpec = new DBLockService.TableSpec("TestTable2", "t2");
     DBLockService.LockSpecification lockSpecification = new DBLockService.LockSpecification(mainTableSpec,

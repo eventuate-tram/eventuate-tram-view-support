@@ -1,4 +1,4 @@
-package io.eventuate.viewsupport.rebuild;
+package io.eventuate.tram.viewsupport.rebuild;
 
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.PostgreSQL82Dialect;
@@ -12,12 +12,10 @@ public class DBLockServiceTest {
 
   @Test
   public void testPostgresQuery() {
-    DBLockService dbLockService = new DBLockService();
     JdbcTemplate jdbcTemplate = Mockito.mock(JdbcTemplate.class);
-    dbLockService.setJdbcTemplate(jdbcTemplate);
     DBDialectDeterminer dbDialectDeterminer = Mockito.mock(DBDialectDeterminer.class);
     Mockito.when(dbDialectDeterminer.getDialect()).thenReturn(new PostgreSQL82Dialect());
-    dbLockService.setDbDialectDeterminer(dbDialectDeterminer);
+    DBLockService dbLockService = new DBLockService(jdbcTemplate, dbDialectDeterminer);
 
     DBLockService.LockSpecification lockSpecification = new DBLockService.LockSpecification(new DBLockService.TableSpec("table1"),
             DBLockService.LockType.READ);
@@ -32,12 +30,10 @@ public class DBLockServiceTest {
 
   @Test
   public void testMysqlQuery() {
-    DBLockService dbLockService = new DBLockService();
     JdbcTemplate jdbcTemplate = Mockito.mock(JdbcTemplate.class);
-    dbLockService.setJdbcTemplate(jdbcTemplate);
     DBDialectDeterminer dbDialectDeterminer = Mockito.mock(DBDialectDeterminer.class);
     Mockito.when(dbDialectDeterminer.getDialect()).thenReturn(new MySQLDialect());
-    dbLockService.setDbDialectDeterminer(dbDialectDeterminer);
+    DBLockService dbLockService = new DBLockService(jdbcTemplate, dbDialectDeterminer);
 
     DBLockService.LockSpecification lockSpecification = new DBLockService.LockSpecification(new DBLockService.TableSpec("table1"),
             DBLockService.LockType.READ);

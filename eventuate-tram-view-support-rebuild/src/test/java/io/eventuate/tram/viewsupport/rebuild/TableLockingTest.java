@@ -1,4 +1,4 @@
-package io.eventuate.viewsupport.rebuild;
+package io.eventuate.tram.viewsupport.rebuild;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -8,6 +8,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.concurrent.*;
@@ -27,8 +28,8 @@ public class TableLockingTest {
     }
 
     @Bean
-    public DBLockService dbLockService() {
-      return new DBLockService();
+    public DBLockService dbLockService(JdbcTemplate jdbcTemplate, DBDialectDeterminer dbDialectDeterminer) {
+      return new DBLockService(jdbcTemplate, dbDialectDeterminer);
     }
   }
 

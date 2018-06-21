@@ -1,4 +1,4 @@
-package io.eventuate.viewsupport.rebuild;
+package io.eventuate.tram.viewsupport.rebuild;
 
 import io.eventuate.javaclient.spring.jdbc.IdGenerator;
 import io.eventuate.javaclient.spring.jdbc.IdGeneratorImpl;
@@ -35,7 +35,7 @@ public class SnapshotConfiguration {
   }
 
   @Bean
-  public DBLockService dbLockService() {
-    return new DBLockService();
+  public DBLockService dbLockService(JdbcTemplate jdbcTemplate, DBDialectDeterminer dbDialectDeterminer) {
+    return new DBLockService(jdbcTemplate, dbDialectDeterminer);
   }
 }
