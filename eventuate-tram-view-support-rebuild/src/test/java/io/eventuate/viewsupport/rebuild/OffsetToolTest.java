@@ -1,4 +1,4 @@
-package io.eventuate.examples.tram.ordersandcustomers.snapshots;
+package io.eventuate.viewsupport.rebuild;
 
 import org.apache.commons.lang.StringUtils;
 import org.aspectj.util.FileUtil;

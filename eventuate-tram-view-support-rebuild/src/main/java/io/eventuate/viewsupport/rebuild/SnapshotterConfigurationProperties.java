@@ -1,4 +1,4 @@
-package io.eventuate.examples.tram.ordersandcustomers.snapshots;
+package io.eventuate.viewsupport.rebuild;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;

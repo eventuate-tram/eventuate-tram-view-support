@@ -1,4 +1,4 @@
-package io.eventuate.examples.tram.ordersandcustomers.snapshots;
+package io.eventuate.viewsupport.rebuild;
 
 import io.eventuate.javaclient.spring.jdbc.IdGenerator;
 import io.eventuate.javaclient.spring.jdbc.IdGeneratorImpl;
@@ -13,6 +13,11 @@ import javax.sql.DataSource;
 
 @Import(TramEventsPublisherConfiguration.class)
 public class SnapshotConfiguration {
+
+  @Bean
+  public DBDialectDeterminer dbDialectDeterminer() {
+    return new DBDialectDeterminer();
+  }
 
   @Bean
   public IdGenerator idGenerator() {

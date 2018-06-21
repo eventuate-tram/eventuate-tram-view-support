@@ -1,4 +1,4 @@
-package io.eventuate.examples.tram.ordersandcustomers.snapshots;
+package io.eventuate.viewsupport.rebuild;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -21,6 +21,11 @@ public class TableLockingTest {
   @EnableJpaRepositories
   @EnableAutoConfiguration
   public static class Config {
+    @Bean
+    public DBDialectDeterminer dbDialectDeterminer() {
+      return new DBDialectDeterminer();
+    }
+
     @Bean
     public DBLockService dbLockService() {
       return new DBLockService();

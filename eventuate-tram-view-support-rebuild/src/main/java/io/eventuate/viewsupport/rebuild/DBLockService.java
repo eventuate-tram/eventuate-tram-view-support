@@ -1,19 +1,17 @@
-package io.eventuate.examples.tram.ordersandcustomers.snapshots;
+package io.eventuate.viewsupport.rebuild;
 
-import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.hibernate.Session;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
-import java.lang.reflect.InvocationTargetException;
-import java.util.*;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -23,12 +21,12 @@ public class DBLockService {
   private JdbcTemplate jdbcTemplate;
 
   @Autowired
-  private EntityManager entityManager;
+  private DBDialectDeterminer dbDialectDeterminer;
 
   @Transactional
   public <T> T withLockedTables(LockSpecification lockSpecification, Supplier<T> callback) {
     try {
-      jdbcTemplate.execute(createLockQueryDependingOnDatabase(lockSpecification));
+      jdbcTemplate.execute(createLockQuery(lockSpecification));
       return callback.get();
     } finally {
       executeUnlockQueryIfNecessary();
@@ -39,28 +37,19 @@ public class DBLockService {
     this.jdbcTemplate = jdbcTemplate;
   }
 
+  public void setDbDialectDeterminer(DBDialectDeterminer dbDialectDeterminer) {
+    this.dbDialectDeterminer = dbDialectDeterminer;
+  }
+
   private boolean isMysql() {
-    return getDialect() instanceof MySQLDialect;
+    return dbDialectDeterminer.getDialect() instanceof MySQLDialect;
   }
 
   private boolean isPostgres() {
-    return getDialect() instanceof PostgreSQL82Dialect;
+    return dbDialectDeterminer.getDialect() instanceof PostgreSQL82Dialect;
   }
 
-  private boolean isDatabaseSupported() {
-    return isMysql() || isPostgres();
-  }
-
-  Dialect getDialect() {
-    Session session = (Session) entityManager.getDelegate();
-    try {
-      return (Dialect)PropertyUtils.getProperty(session.getSessionFactory(), "dialect");
-    } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  String createLockQueryDependingOnDatabase(LockSpecification lockSpecification) {
+  String createLockQuery(LockSpecification lockSpecification) {
     if (isMysql()) {
       return buildMySqlLockQuery(lockSpecification);
     } else if (isPostgres()) {

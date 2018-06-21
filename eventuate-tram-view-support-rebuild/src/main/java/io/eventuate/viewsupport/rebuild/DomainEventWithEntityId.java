@@ -1,4 +1,4 @@
-package io.eventuate.examples.tram.ordersandcustomers.snapshots;
+package io.eventuate.viewsupport.rebuild;
 
 import io.eventuate.tram.events.common.DomainEvent;
 

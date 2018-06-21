@@ -1,4 +1,4 @@
-package io.eventuate.examples.tram.ordersandcustomers.snapshots;
+package io.eventuate.viewsupport.rebuild;
 
 import com.google.common.collect.ImmutableMap;
 import io.eventuate.javaclient.commonimpl.JSonMapper;
