@@ -1,0 +1,9 @@
+dependencies {
+    compile project(":eventuate-tram-view-support-rebuild")
+    compile "org.springframework.boot:spring-boot-starter-data-mongodb:$springBootVersion"
+
+    testCompile "io.eventuate.util:eventuate-util-test:$eventuateUtilVersion"
+    testCompile "junit:junit:4.12"
+    testCompile "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
+}
+

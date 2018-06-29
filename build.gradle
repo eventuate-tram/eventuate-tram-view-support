@@ -11,14 +11,36 @@ task wrapper(type: Wrapper) {
     gradleVersion = '3.5'
 }
 
+allprojects {
+    group = "io.eventuate.tram.view.support"
+}
+
 subprojects {
 
     apply plugin: "java"
+    apply plugin: 'maven'
 
     repositories {
         mavenCentral()
         jcenter()
         eventuateMavenRepoUrl.split(',').each { repoUrl -> maven { url repoUrl } }
+    }
+
+    uploadArchives {
+        repositories {
+            mavenDeployer {
+                repository(url: deployUrl)
+                pom.project {
+                    licenses {
+                        license {
+                            name 'The Apache Software License, Version 2.0'
+                            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                            distribution 'repo'
+                        }
+                    }
+                }
+            }
+        }
     }
 
 }

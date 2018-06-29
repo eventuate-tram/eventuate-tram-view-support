@@ -59,9 +59,15 @@ public class IterationOverDomainEntitiesTest {
     DomainSnapshotExportService domainSnapshotExportService = new DomainSnapshotExportService(null,
             null,
             null,
-            null,
             TestEntity.class,
-            testRepository, null, null, snapshotterConfigurationProperties.getDomainRepositoryPageSize());
+            testRepository,
+            null,
+            null,
+            snapshotterConfigurationProperties.getDomainRepositoryPageSize(),
+            snapshotterConfigurationProperties.getCdcServiceUrl(),
+            snapshotterConfigurationProperties.getCdcStatusServiceEndPoint(),
+            snapshotterConfigurationProperties.getMaxIterationsToCheckCdcProcessing(),
+            snapshotterConfigurationProperties.getTimeoutBetweenCdcProcessingCheckingIterationsInMilliseconds());
 
     testRepository.deleteAll();
 
