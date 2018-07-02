@@ -68,6 +68,12 @@ public class DomainSnapshotExportService<T> {
   }
 
   private Void publishSnapshotEvents() {
+    waitUntilCdcProcessingFinished();
+    iterateOverAllDomainEntities(this::publishDomainEntity);
+    return null;
+  }
+
+  private void waitUntilCdcProcessingFinished() {
     for (int i = 1; i <= maxIterationsToCheckCdcProcessing; i++) {
       if (getCdcProcessingStatus().isLastEventOffsetEqualsToHighwaterMark()) {
         break;
@@ -81,9 +87,6 @@ public class DomainSnapshotExportService<T> {
         }
       }
     }
-
-    iterateOverAllDomainEntities(this::publishDomainEntity);
-    return null;
   }
 
   private CdcProcessingStatus getCdcProcessingStatus() {

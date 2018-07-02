@@ -11,7 +11,7 @@ public class SnapshotterConfigurationProperties {
   @Value("${cdc.service.url}")
   private String cdcServiceUrl;
 
-  @Value("${cdc.status.service.end.poing:#{\"cdc-event-processing-status\"}}")
+  @Value("${cdc.status.service.end.point:#{\"cdc-event-processing-status\"}}")
   private String cdcStatusServiceEndPoint;
 
   @Value("${max.iterations.to.check.cdc.processing:#{20}}")

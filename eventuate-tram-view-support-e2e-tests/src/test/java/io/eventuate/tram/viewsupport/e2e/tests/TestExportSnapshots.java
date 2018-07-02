@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = EventuateTramViewSupportE2ETestConfiguration.class,
@@ -34,13 +35,14 @@ public class TestExportSnapshots {
     String dataPrefix = UUID.randomUUID().toString();
     int domainEntitiesCount = 10;
 
-    Set<String> originalData = new HashSet<>();
-
-    for (int i = 0; i < domainEntitiesCount; i++) {
-      String data = dataPrefix + i;
-      testDomainEntityRepository.save(new TestDomainEntity(data));
-      originalData.add(data);
-    }
+    Set<String> originalData = IntStream
+            .range(0, domainEntitiesCount)
+            .mapToObj(i -> {
+              String data = dataPrefix + i;
+              testDomainEntityRepository.save(new TestDomainEntity(data));
+              return data;
+            })
+            .collect(Collectors.toSet());
 
     domainEntityDomainSnapshotExportService.exportSnapshots();
 
