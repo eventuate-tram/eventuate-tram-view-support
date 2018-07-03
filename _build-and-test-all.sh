@@ -5,7 +5,7 @@ set -e
 . ./set-env-${DATABASE?}.sh
 
 docker-compose -f docker-compose-${DATABASE?}.yml down -v
-docker-compose -f docker-compose-${DATABASE?}.yml up -d --build zookeeper kafka mysql mongodb
+docker-compose -f docker-compose-${DATABASE?}.yml up -d --build zookeeper kafka ${DATABASE?} mongodb
 
 ./wait-for-${DATABASE?}.sh
 
