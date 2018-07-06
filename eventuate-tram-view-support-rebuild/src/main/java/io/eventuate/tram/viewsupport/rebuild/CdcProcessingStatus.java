@@ -3,15 +3,15 @@ package io.eventuate.tram.viewsupport.rebuild;
 public class CdcProcessingStatus {
   private long lastEventOffset;
   private long logsHighwaterMark;
-  private boolean lastEventOffsetEqualsToHighwaterMark;
+  private boolean cdcProcessingFinished;
 
   public CdcProcessingStatus() {
   }
 
-  public CdcProcessingStatus(long lastEventOffset, long logsHighwaterMark, boolean lastEventOffsetEqualsToHighwaterMark) {
+  public CdcProcessingStatus(long lastEventOffset, long logsHighwaterMark, boolean cdcProcessingFinished) {
     this.lastEventOffset = lastEventOffset;
     this.logsHighwaterMark = logsHighwaterMark;
-    this.lastEventOffsetEqualsToHighwaterMark = lastEventOffsetEqualsToHighwaterMark;
+    this.cdcProcessingFinished = cdcProcessingFinished;
   }
 
   public long getLastEventOffset() {
@@ -30,11 +30,11 @@ public class CdcProcessingStatus {
     this.logsHighwaterMark = logsHighwaterMark;
   }
 
-  public boolean isLastEventOffsetEqualsToHighwaterMark() {
-    return lastEventOffsetEqualsToHighwaterMark;
+  public boolean isCdcProcessingFinished() {
+    return cdcProcessingFinished;
   }
 
-  public void setLastEventOffsetEqualsToHighwaterMark(boolean lastEventOffsetEqualsToHighwaterMark) {
-    this.lastEventOffsetEqualsToHighwaterMark = lastEventOffsetEqualsToHighwaterMark;
+  public void setCdcProcessingFinished(boolean cdcProcessingFinished) {
+    this.cdcProcessingFinished = cdcProcessingFinished;
   }
 }

@@ -61,8 +61,7 @@ public class DomainSnapshotExportService<T> {
 
   public void exportSnapshots() {
     DBLockService.LockSpecification lockSpecification = new DBLockService.LockSpecification(domainTableSpec,
-            DBLockService.LockType.READ,
-            ImmutableMap.of(new DBLockService.TableSpec("message"), DBLockService.LockType.WRITE));
+            DBLockService.LockType.READ);
 
     dbLockService.withLockedTables(lockSpecification, this::publishSnapshotEvents);
   }
@@ -75,7 +74,7 @@ public class DomainSnapshotExportService<T> {
 
   private void waitUntilCdcProcessingFinished() {
     for (int i = 1; i <= maxIterationsToCheckCdcProcessing; i++) {
-      if (getCdcProcessingStatus().isLastEventOffsetEqualsToHighwaterMark()) {
+      if (getCdcProcessingStatus().isCdcProcessingFinished()) {
         break;
       } else if (i == maxIterationsToCheckCdcProcessing) {
         throw new RuntimeException("Cdc message processing was not finished in time.");
