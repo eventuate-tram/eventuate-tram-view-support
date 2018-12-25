@@ -59,22 +59,22 @@ public class DomainSnapshotExportService<T> {
     this.timeoutBetweenCdcProcessingCheckingIterationsInMilliseconds = timeoutBetweenCdcProcessingCheckingIterationsInMilliseconds;
   }
 
-  public void exportSnapshots() {
+  public void exportSnapshots(long binlogClientId) {
     DBLockService.LockSpecification lockSpecification = new DBLockService.LockSpecification(domainTableSpec,
             DBLockService.LockType.READ);
 
-    dbLockService.withLockedTables(lockSpecification, this::publishSnapshotEvents);
+    dbLockService.withLockedTables(lockSpecification, () -> publishSnapshotEvents(binlogClientId));
   }
 
-  private Void publishSnapshotEvents() {
-    waitUntilCdcProcessingFinished();
+  private Void publishSnapshotEvents(long binlogClientId) {
+    waitUntilCdcProcessingFinished(binlogClientId);
     iterateOverAllDomainEntities(this::publishDomainEntity);
     return null;
   }
 
-  private void waitUntilCdcProcessingFinished() {
+  private void waitUntilCdcProcessingFinished(long binlogClientId) {
     for (int i = 1; i <= maxIterationsToCheckCdcProcessing; i++) {
-      if (getCdcProcessingStatus().isCdcProcessingFinished()) {
+      if (getCdcProcessingStatus(binlogClientId).isCdcProcessingFinished()) {
         break;
       } else if (i == maxIterationsToCheckCdcProcessing) {
         throw new RuntimeException("Cdc message processing was not finished in time.");
@@ -88,8 +88,10 @@ public class DomainSnapshotExportService<T> {
     }
   }
 
-  private CdcProcessingStatus getCdcProcessingStatus() {
-    return restTemplate.getForObject(String.format("%s/%s", cdcServiceUrl, cdcStatusServiceEndPoint), CdcProcessingStatus.class);
+  private CdcProcessingStatus getCdcProcessingStatus(long binlogClientId) {
+    return restTemplate
+            .getForObject(String.format("%s/%s?clientId=%s", cdcServiceUrl, cdcStatusServiceEndPoint, binlogClientId),
+                    CdcProcessingStatus.class);
   }
 
   void iterateOverAllDomainEntities(Consumer<T> callback) {

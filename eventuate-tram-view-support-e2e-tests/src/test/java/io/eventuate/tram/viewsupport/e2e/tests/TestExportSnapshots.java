@@ -21,6 +21,8 @@ import java.util.stream.IntStream;
         webEnvironment = SpringBootTest.WebEnvironment.NONE)
 public class TestExportSnapshots {
 
+  private static final long BINLOG_CLIENT_ID = 1;
+
   @Autowired
   private TestDomainEntityRepository testDomainEntityRepository;
 
@@ -44,7 +46,7 @@ public class TestExportSnapshots {
             })
             .collect(Collectors.toSet());
 
-    domainEntityDomainSnapshotExportService.exportSnapshots();
+    domainEntityDomainSnapshotExportService.exportSnapshots(BINLOG_CLIENT_ID);
 
     Eventually.eventually(() -> {
       List<TestDomainEntityView> views = testDomainEntityViewRepository.findAll();

@@ -1,12 +1,12 @@
 zookeeper:
-  image: eventuateio/eventuateio-local-zookeeper:0.18.0.RELEASE
+  image: eventuateio/eventuateio-local-zookeeper:0.30.0.M7
   ports:
     - 2181:2181
     - 2888:2888
     - 3888:3888
 
 kafka:
-  image: test-eventuateio-local-kafka
+  image: eventuateio/eventuateio-local-kafka:0.30.0.M7
   ports:
     - 9092:9092
   links:
@@ -52,4 +52,6 @@ cdcservice:
     EVENTUATELOCAL_CDC_MAX_EVENTS_PER_POLLING: 1000
     EVENTUATELOCAL_CDC_MAX_ATTEMPTS_FOR_POLLING: 100
     EVENTUATELOCAL_CDC_POLLING_RETRY_INTERVAL_IN_MILLISECONDS: 500
+    EVENTUATELOCAL_CDC_OLD_DEBEZIUM_DB_HISTORY_TOPIC_NAME: none
+    EVENTUATELOCAL_CDC_BINLOG_CLIENT_ID: 1
     SPRING_PROFILES_ACTIVE: EventuatePolling
