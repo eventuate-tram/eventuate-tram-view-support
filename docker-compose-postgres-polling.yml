@@ -17,7 +17,7 @@ kafka:
     - ZOOKEEPER_SERVERS=zookeeper:2181
 
 postgres:
-  image: test-eventuate-tram-postgres
+  image: eventuateio/eventuate-tram-postgres:0.20.0.M7
   ports:
     - 5432:5432
   environment:
@@ -32,7 +32,7 @@ mongodb:
     - "27017:27017"
 
 cdcservice:
-  image: test-eventuate-tram-cdc-mysql-service
+  image: eventuateio/eventuate-tram-cdc-mysql-service:0.20.0.M7
   links:
     - postgres
     - kafka
