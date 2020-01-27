@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -21,7 +20,7 @@ import java.util.stream.IntStream;
         webEnvironment = SpringBootTest.WebEnvironment.NONE)
 public class TestExportSnapshots {
 
-  private static final long BINLOG_CLIENT_ID = 1;
+  private static final String READER_NAME = "Reader";
 
   @Autowired
   private TestDomainEntityRepository testDomainEntityRepository;
@@ -46,7 +45,7 @@ public class TestExportSnapshots {
             })
             .collect(Collectors.toSet());
 
-    domainEntityDomainSnapshotExportService.exportSnapshots(BINLOG_CLIENT_ID);
+    domainEntityDomainSnapshotExportService.exportSnapshots(READER_NAME);
 
     Eventually.eventually(() -> {
       List<TestDomainEntityView> views = testDomainEntityViewRepository.findAll();

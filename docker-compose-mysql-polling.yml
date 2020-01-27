@@ -34,7 +34,7 @@ mongodb:
     - "27017:27017"
 
 cdcservice:
-  image: eventuateio/eventuate-tram-cdc-mysql-service:0.20.0.M10
+  image: eventuateio/eventuate-cdc-service:local-test
   ports:
     - "8099:8080"
   links:
@@ -54,5 +54,5 @@ cdcservice:
     EVENTUATELOCAL_CDC_MAX_EVENTS_PER_POLLING: 1000
     EVENTUATELOCAL_CDC_MAX_ATTEMPTS_FOR_POLLING: 100
     EVENTUATELOCAL_CDC_POLLING_RETRY_INTERVAL_IN_MILLISECONDS: 500
-    EVENTUATELOCAL_CDC_BINLOG_CLIENT_ID: 1
+    EVENTUATELOCAL_CDC_READER_NAME: Reader
     SPRING_PROFILES_ACTIVE: EventuatePolling

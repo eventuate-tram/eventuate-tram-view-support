@@ -21,11 +21,10 @@ public class IterationOverDomainEntitiesTest {
   @Configuration
   @EnableJpaRepositories
   @EnableAutoConfiguration
-  @ComponentScan
   public static class Config {
     @Bean
-    public DBDialectDeterminer dbDialectDeterminer() {
-      return new DBDialectDeterminer();
+    public SnapshotterConfigurationProperties snapshotterConfigurationProperties() {
+      return new SnapshotterConfigurationProperties();
     }
   }
 

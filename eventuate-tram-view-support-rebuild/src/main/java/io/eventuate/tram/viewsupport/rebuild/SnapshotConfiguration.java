@@ -1,10 +1,8 @@
 package io.eventuate.tram.viewsupport.rebuild;
 
-import io.eventuate.javaclient.spring.jdbc.IdGenerator;
-import io.eventuate.javaclient.spring.jdbc.IdGeneratorImpl;
-import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
-import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
-import io.eventuate.local.java.kafka.producer.EventuateKafkaProducerConfigurationProperties;
+import io.eventuate.messaging.kafka.basic.consumer.EventuateKafkaConsumerConfigurationProperties;
+import io.eventuate.messaging.kafka.producer.EventuateKafkaProducer;
+import io.eventuate.messaging.kafka.producer.EventuateKafkaProducerConfigurationProperties;
 import io.eventuate.tram.events.publisher.TramEventsPublisherConfiguration;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -25,11 +23,6 @@ public class SnapshotConfiguration {
   }
 
   @Bean
-  public IdGenerator idGenerator() {
-    return new IdGeneratorImpl();
-  }
-
-  @Bean
   public JdbcTemplate jdbcTemplate(DataSource dataSource) {
     return new JdbcTemplate(dataSource);
   }
@@ -43,5 +36,10 @@ public class SnapshotConfiguration {
   @Bean
   public DBLockService dbLockService(JdbcTemplate jdbcTemplate, DBDialectDeterminer dbDialectDeterminer) {
     return new DBLockService(jdbcTemplate, dbDialectDeterminer);
+  }
+
+  @Bean
+  public SnapshotterConfigurationProperties snapshotterConfigurationProperties() {
+    return new SnapshotterConfigurationProperties();
   }
 }

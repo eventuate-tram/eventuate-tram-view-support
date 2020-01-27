@@ -1,9 +1,10 @@
 package io.eventuate.tram.viewsupport.e2e.tests;
 
-import io.eventuate.javaclient.spring.jdbc.IdGenerator;
-import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
-import io.eventuate.tram.consumer.kafka.TramConsumerKafkaConfiguration;
+import io.eventuate.common.id.IdGenerator;
+import io.eventuate.messaging.kafka.producer.EventuateKafkaProducer;
+import io.eventuate.tram.consumer.kafka.EventuateTramKafkaMessageConsumerConfiguration;
 import io.eventuate.tram.events.common.DomainEvent;
+import io.eventuate.tram.events.common.DomainEventNameMapping;
 import io.eventuate.tram.events.publisher.TramEventsPublisherConfiguration;
 import io.eventuate.tram.events.subscriber.DomainEventDispatcher;
 import io.eventuate.tram.messaging.consumer.MessageConsumer;
@@ -22,17 +23,11 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 @ComponentScan
 @EnableJpaRepositories
 @EnableMongoRepositories
-@Import({TramConsumerKafkaConfiguration.class,
+@Import({EventuateTramKafkaMessageConsumerConfiguration.class,
         TramEventsPublisherConfiguration.class,
         TramMessageProducerJdbcConfiguration.class,
         SnapshotConfiguration.class})
 public class EventuateTramViewSupportE2ETestConfiguration {
-
-  @Bean
-  public SnapshotterConfigurationProperties snapshotterConfigurationProperties() {
-    return new SnapshotterConfigurationProperties();
-  }
-
   @Bean
   public TestDomainEntityViewEventConsumer orderEventConsumer() {
     return new TestDomainEntityViewEventConsumer();
@@ -40,10 +35,11 @@ public class EventuateTramViewSupportE2ETestConfiguration {
 
   @Bean("testDomainEntityDomainEventDispatcher")
   public DomainEventDispatcher orderHistoryDomainEventDispatcher(TestDomainEntityViewEventConsumer testDomainEntityViewEventConsumer,
-                                                                 MessageConsumer messageConsumer) {
+                                                                 MessageConsumer messageConsumer,
+                                                                 DomainEventNameMapping domainEventNameMapping) {
 
     return new DomainEventDispatcher("testDomainEntityServiceEvents",
-            testDomainEntityViewEventConsumer.domainEventHandlers(), messageConsumer);
+            testDomainEntityViewEventConsumer.domainEventHandlers(), messageConsumer, domainEventNameMapping);
   }
 
   @Bean

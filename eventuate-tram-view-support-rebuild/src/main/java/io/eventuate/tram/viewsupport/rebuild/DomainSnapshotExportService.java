@@ -1,9 +1,8 @@
 package io.eventuate.tram.viewsupport.rebuild;
 
-import com.google.common.collect.ImmutableMap;
-import io.eventuate.javaclient.commonimpl.JSonMapper;
-import io.eventuate.javaclient.spring.jdbc.IdGenerator;
-import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
+import io.eventuate.common.id.IdGenerator;
+import io.eventuate.common.json.mapper.JSonMapper;
+import io.eventuate.messaging.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.tram.events.common.EventMessageHeaders;
 import io.eventuate.tram.messaging.common.Message;
 import io.eventuate.tram.messaging.producer.MessageBuilder;
@@ -59,22 +58,22 @@ public class DomainSnapshotExportService<T> {
     this.timeoutBetweenCdcProcessingCheckingIterationsInMilliseconds = timeoutBetweenCdcProcessingCheckingIterationsInMilliseconds;
   }
 
-  public void exportSnapshots(long binlogClientId) {
+  public void exportSnapshots(String readerName) {
     DBLockService.LockSpecification lockSpecification = new DBLockService.LockSpecification(domainTableSpec,
             DBLockService.LockType.READ);
 
-    dbLockService.withLockedTables(lockSpecification, () -> publishSnapshotEvents(binlogClientId));
+    dbLockService.withLockedTables(lockSpecification, () -> publishSnapshotEvents(readerName));
   }
 
-  private Void publishSnapshotEvents(long binlogClientId) {
-    waitUntilCdcProcessingFinished(binlogClientId);
+  private Void publishSnapshotEvents(String readerName) {
+    waitUntilCdcProcessingFinished(readerName);
     iterateOverAllDomainEntities(this::publishDomainEntity);
     return null;
   }
 
-  private void waitUntilCdcProcessingFinished(long binlogClientId) {
+  private void waitUntilCdcProcessingFinished(String readerName) {
     for (int i = 1; i <= maxIterationsToCheckCdcProcessing; i++) {
-      if (getCdcProcessingStatus(binlogClientId).isCdcProcessingFinished()) {
+      if (getCdcProcessingStatus(readerName).isCdcProcessingFinished()) {
         break;
       } else if (i == maxIterationsToCheckCdcProcessing) {
         throw new RuntimeException("Cdc message processing was not finished in time.");
@@ -88,9 +87,9 @@ public class DomainSnapshotExportService<T> {
     }
   }
 
-  private CdcProcessingStatus getCdcProcessingStatus(long binlogClientId) {
+  private CdcProcessingStatus getCdcProcessingStatus(String readerName) {
     return restTemplate
-            .getForObject(String.format("%s/%s?clientId=%s", cdcServiceUrl, cdcStatusServiceEndPoint, binlogClientId),
+            .getForObject(String.format("%s/%s?readerName=%s", cdcServiceUrl, cdcStatusServiceEndPoint, readerName),
                     CdcProcessingStatus.class);
   }
 
