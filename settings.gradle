@@ -1,0 +1,2 @@
+include 'eventuate-tram-view-support-rebuild'
+include 'eventuate-tram-view-support-e2e-tests'
