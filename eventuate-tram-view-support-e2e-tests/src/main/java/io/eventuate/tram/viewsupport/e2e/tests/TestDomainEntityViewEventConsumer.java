@@ -18,7 +18,7 @@ public class TestDomainEntityViewEventConsumer {
   }
 
   void testDomainEntitySnapshotEventHandler(DomainEventEnvelope<TestDomainEntitySnapshotEvent> domainEventEnvelope) {
-    TestDomainEntitySnapshotEvent customerSnapshotEvent = domainEventEnvelope.getEvent();
-    testDomainEntityViewRepository.addTestDomainEntityView(customerSnapshotEvent.getId(), customerSnapshotEvent.getData());
+    TestDomainEntitySnapshotEvent testDomainEntitySnapshotEvent = domainEventEnvelope.getEvent();
+    testDomainEntityViewRepository.addTestDomainEntityView(testDomainEntitySnapshotEvent.getId(), testDomainEntitySnapshotEvent.getData());
   }
 }
