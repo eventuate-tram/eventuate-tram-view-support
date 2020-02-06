@@ -29,7 +29,7 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
         SnapshotConfiguration.class})
 public class EventuateTramViewSupportE2ETestConfiguration {
   @Bean
-  public TestDomainEntityViewEventConsumer orderEventConsumer() {
+  public TestDomainEntityViewEventConsumer testDomainEntityViewEventConsumer() {
     return new TestDomainEntityViewEventConsumer();
   }
 
@@ -61,7 +61,9 @@ public class EventuateTramViewSupportE2ETestConfiguration {
             snapshotterConfigurationProperties.getDomainRepositoryPageSize(),
             snapshotterConfigurationProperties.getCdcServiceUrl(),
             snapshotterConfigurationProperties.getCdcStatusServiceEndPoint(),
+            "Reader",
             snapshotterConfigurationProperties.getMaxIterationsToCheckCdcProcessing(),
-            snapshotterConfigurationProperties.getTimeoutBetweenCdcProcessingCheckingIterationsInMilliseconds());
+            snapshotterConfigurationProperties.getTimeoutBetweenCdcProcessingCheckingIterationsInMilliseconds(),
+            snapshotterConfigurationProperties.getKafkaPartitions());
   }
 }

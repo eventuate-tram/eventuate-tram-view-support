@@ -1,13 +1,18 @@
 package io.eventuate.tram.viewsupport.e2e.tests;
 
 import io.eventuate.tram.viewsupport.rebuild.DomainSnapshotExportService;
+import io.eventuate.tram.viewsupport.rebuild.PartitionOffset;
+import io.eventuate.tram.viewsupport.rebuild.SnapshotterConfigurationProperties;
 import io.eventuate.util.test.async.Eventually;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 import java.util.Set;
@@ -17,10 +22,8 @@ import java.util.stream.IntStream;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = EventuateTramViewSupportE2ETestConfiguration.class,
-        webEnvironment = SpringBootTest.WebEnvironment.NONE)
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class TestExportSnapshots {
-
-  private static final String READER_NAME = "Reader";
 
   @Autowired
   private TestDomainEntityRepository testDomainEntityRepository;
@@ -30,6 +33,14 @@ public class TestExportSnapshots {
 
   @Autowired
   private DomainSnapshotExportService<TestDomainEntity> domainEntityDomainSnapshotExportService;
+
+  @Autowired
+  private SnapshotterConfigurationProperties snapshotterConfigurationProperties;
+
+  @LocalServerPort
+  private int port;
+
+  private RestTemplate restTemplate = new RestTemplate();
 
   @Test
   public void testThatViewsMatchOriginalEntitiesAfterExport() {
@@ -45,7 +56,15 @@ public class TestExportSnapshots {
             })
             .collect(Collectors.toSet());
 
-    domainEntityDomainSnapshotExportService.exportSnapshots(READER_NAME);
+    domainEntityDomainSnapshotExportService.exportSnapshots();
+
+    PartitionOffset[] partitionOffsets = restTemplate.postForObject(String.format("http://localhost:%s/export/test-domain-entity", port), null, PartitionOffset[].class);
+
+    Assert.assertEquals(snapshotterConfigurationProperties.getKafkaPartitions(), partitionOffsets.length);
+
+    for (PartitionOffset partitionOffset : partitionOffsets) {
+      Assert.assertTrue(partitionOffset.getOffset() > 0);
+    }
 
     Eventually.eventually(() -> {
       List<TestDomainEntityView> views = testDomainEntityViewRepository.findAll();
