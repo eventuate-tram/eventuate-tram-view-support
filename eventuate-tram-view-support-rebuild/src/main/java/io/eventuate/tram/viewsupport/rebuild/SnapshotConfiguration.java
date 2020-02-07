@@ -1,10 +1,8 @@
 package io.eventuate.tram.viewsupport.rebuild;
 
 import io.eventuate.common.id.IdGenerator;
-import io.eventuate.messaging.kafka.basic.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.messaging.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.messaging.kafka.producer.EventuateKafkaProducerConfigurationProperties;
-import io.eventuate.tram.consumer.kafka.EventuateTramKafkaMessageConsumerConfiguration;
 import io.eventuate.tram.events.publisher.TramEventsPublisherConfiguration;
 import io.eventuate.tram.messaging.producer.jdbc.TramMessageProducerJdbcConfiguration;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,10 +14,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import javax.sql.DataSource;
 
 @Import({TramEventsPublisherConfiguration.class,
-        EventuateTramKafkaMessageConsumerConfiguration.class,
         TramMessageProducerJdbcConfiguration.class})
-@EnableConfigurationProperties({EventuateKafkaProducerConfigurationProperties.class,
-        EventuateKafkaConsumerConfigurationProperties.class})
+@EnableConfigurationProperties({EventuateKafkaProducerConfigurationProperties.class})
 public class SnapshotConfiguration {
 
   @Bean
