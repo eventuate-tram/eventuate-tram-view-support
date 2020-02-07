@@ -1,14 +1,13 @@
 package io.eventuate.tram.viewsupport.e2e.tests;
 
 import io.eventuate.tram.viewsupport.rebuild.DomainSnapshotExportService;
-import io.eventuate.tram.viewsupport.rebuild.PartitionOffset;
+import io.eventuate.tram.viewsupport.rebuild.TopicPartitionOffset;
 import io.eventuate.tram.viewsupport.rebuild.SnapshotterConfigurationProperties;
 import io.eventuate.util.test.async.Eventually;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -58,12 +57,13 @@ public class TestExportSnapshots {
 
     domainEntityDomainSnapshotExportService.exportSnapshots();
 
-    PartitionOffset[] partitionOffsets = restTemplate.postForObject(String.format("http://localhost:%s/export/test-domain-entity", port), null, PartitionOffset[].class);
+    TopicPartitionOffset[] topicPartitionOffsets = restTemplate.postForObject(String.format("http://localhost:%s/export/test-domain-entity", port), null, TopicPartitionOffset[].class);
 
-    Assert.assertEquals(snapshotterConfigurationProperties.getKafkaPartitions(), partitionOffsets.length);
+    Assert.assertEquals(snapshotterConfigurationProperties.getKafkaPartitions(), topicPartitionOffsets.length);
 
-    for (PartitionOffset partitionOffset : partitionOffsets) {
-      Assert.assertTrue(partitionOffset.getOffset() > 0);
+    for (TopicPartitionOffset topicPartitionOffset : topicPartitionOffsets) {
+      Assert.assertTrue(topicPartitionOffset.getOffset() > 0);
+      Assert.assertEquals(TestDomainEntity.class.getName(), topicPartitionOffset.getTopic());
     }
 
     Eventually.eventually(() -> {

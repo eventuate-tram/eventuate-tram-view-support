@@ -70,18 +70,18 @@ public class DomainSnapshotExportService<T> {
     this.kafkaPartitions = kafkaPartitions;
   }
 
-  public List<PartitionOffset> exportSnapshots() {
+  public List<TopicPartitionOffset> exportSnapshots() {
     DBLockService.LockSpecification lockSpecification = new DBLockService.LockSpecification(domainTableSpec,
             DBLockService.LockType.READ);
 
     return dbLockService.withLockedTables(lockSpecification, this::publishSnapshots);
   }
 
-  private List<PartitionOffset> publishSnapshots() {
+  private List<TopicPartitionOffset> publishSnapshots() {
     waitUntilCdcProcessingFinished(readerName);
-    List<PartitionOffset> partitionOffsets = publishSnapshotEvents();
+    List<TopicPartitionOffset> topicPartitionOffsets = publishSnapshotEvents();
     iterateOverAllDomainEntities(this::publishDomainEntity);
-    return partitionOffsets;
+    return topicPartitionOffsets;
   }
 
   private void waitUntilCdcProcessingFinished(String readerName) {
@@ -124,7 +124,7 @@ public class DomainSnapshotExportService<T> {
     }
   }
 
-  private List<PartitionOffset> publishSnapshotEvents() {
+  private List<TopicPartitionOffset> publishSnapshotEvents() {
     List<CompletableFuture<?>> metadata = new ArrayList<>();
 
     for (int i = 0; i < kafkaPartitions; i++) {
@@ -147,7 +147,8 @@ public class DomainSnapshotExportService<T> {
     return metadata
             .stream()
             .map(this::getRecordMetadataFromFuture)
-            .map(recordMetadata -> new PartitionOffset(recordMetadata.partition(), recordMetadata.offset()))
+            .map(recordMetadata ->
+                    new TopicPartitionOffset(recordMetadata.topic(), recordMetadata.partition(), recordMetadata.offset()))
             .collect(Collectors.toList());
   }
 

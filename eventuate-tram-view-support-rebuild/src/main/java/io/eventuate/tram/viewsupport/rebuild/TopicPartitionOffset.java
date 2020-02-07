@@ -1,15 +1,25 @@
 package io.eventuate.tram.viewsupport.rebuild;
 
-public class PartitionOffset {
+public class TopicPartitionOffset {
+  private String topic;
   private int partition;
   private long offset;
 
-  public PartitionOffset() {
+  public TopicPartitionOffset() {
   }
 
-  public PartitionOffset(int partition, long offset) {
+  public TopicPartitionOffset(String topic, int partition, long offset) {
+    this.topic = topic;
     this.partition = partition;
     this.offset = offset;
+  }
+
+  public String getTopic() {
+    return topic;
+  }
+
+  public void setTopic(String topic) {
+    this.topic = topic;
   }
 
   public int getPartition() {
