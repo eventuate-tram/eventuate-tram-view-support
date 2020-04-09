@@ -18,6 +18,9 @@ public class SnapshotterConfigurationProperties {
   @Value("${timeout.between.cdc.processing.checking.iterations.in.milliseconds:#{1000}}")
   private int timeoutBetweenCdcProcessingCheckingIterationsInMilliseconds;
 
+  @Value("${eventuate.kafka.partitions}")
+  private int kafkaPartitions;
+
   public int getDomainRepositoryPageSize() {
     return domainRepositoryPageSize;
   }
@@ -36,5 +39,9 @@ public class SnapshotterConfigurationProperties {
 
   public int getTimeoutBetweenCdcProcessingCheckingIterationsInMilliseconds() {
     return timeoutBetweenCdcProcessingCheckingIterationsInMilliseconds;
+  }
+
+  public int getKafkaPartitions() {
+    return kafkaPartitions;
   }
 }

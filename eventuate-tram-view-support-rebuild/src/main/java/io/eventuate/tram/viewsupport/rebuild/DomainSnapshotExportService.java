@@ -6,13 +6,19 @@ import io.eventuate.messaging.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.tram.events.common.EventMessageHeaders;
 import io.eventuate.tram.messaging.common.Message;
 import io.eventuate.tram.messaging.producer.MessageBuilder;
+import org.apache.kafka.clients.producer.RecordMetadata;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class DomainSnapshotExportService<T> {
   protected PagingAndSortingRepository<T, Long> domainRepository;
@@ -27,8 +33,10 @@ public class DomainSnapshotExportService<T> {
   private int iterationPageSize;
   private String cdcServiceUrl;
   private String cdcStatusServiceEndPoint;
+  private String readerName;
   private int maxIterationsToCheckCdcProcessing;
   private int timeoutBetweenCdcProcessingCheckingIterationsInMilliseconds;
+  private int kafkaPartitions;
   private RestTemplate restTemplate = new RestTemplate();
 
   public DomainSnapshotExportService(EventuateKafkaProducer eventuateKafkaProducer,
@@ -41,8 +49,10 @@ public class DomainSnapshotExportService<T> {
                                      int iterationPageSize,
                                      String cdcServiceUrl,
                                      String cdcStatusServiceEndPoint,
+                                     String readerName,
                                      int maxIterationsToCheckCdcProcessing,
-                                     int timeoutBetweenCdcProcessingCheckingIterationsInMilliseconds) {
+                                     int timeoutBetweenCdcProcessingCheckingIterationsInMilliseconds,
+                                     int kafkaPartitions) {
 
     this.eventuateKafkaProducer = eventuateKafkaProducer;
     this.dbLockService = dbLockService;
@@ -54,21 +64,24 @@ public class DomainSnapshotExportService<T> {
     this.iterationPageSize = iterationPageSize;
     this.cdcServiceUrl = cdcServiceUrl;
     this.cdcStatusServiceEndPoint = cdcStatusServiceEndPoint;
+    this.readerName = readerName;
     this.maxIterationsToCheckCdcProcessing = maxIterationsToCheckCdcProcessing;
     this.timeoutBetweenCdcProcessingCheckingIterationsInMilliseconds = timeoutBetweenCdcProcessingCheckingIterationsInMilliseconds;
+    this.kafkaPartitions = kafkaPartitions;
   }
 
-  public void exportSnapshots(String readerName) {
+  public List<TopicPartitionOffset> exportSnapshots() {
     DBLockService.LockSpecification lockSpecification = new DBLockService.LockSpecification(domainTableSpec,
             DBLockService.LockType.READ);
 
-    dbLockService.withLockedTables(lockSpecification, () -> publishSnapshotEvents(readerName));
+    return dbLockService.withLockedTables(lockSpecification, this::publishSnapshots);
   }
 
-  private Void publishSnapshotEvents(String readerName) {
+  private List<TopicPartitionOffset> publishSnapshots() {
     waitUntilCdcProcessingFinished(readerName);
+    List<TopicPartitionOffset> topicPartitionOffsets = publishSnapshotEvents();
     iterateOverAllDomainEntities(this::publishDomainEntity);
-    return null;
+    return topicPartitionOffsets;
   }
 
   private void waitUntilCdcProcessingFinished(String readerName) {
@@ -101,6 +114,42 @@ public class DomainSnapshotExportService<T> {
         break;
       }
     }
+  }
+
+  private RecordMetadata getRecordMetadataFromFuture(CompletableFuture<?> completableFuture) {
+    try {
+      return (RecordMetadata)completableFuture.get();
+    } catch (InterruptedException | ExecutionException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private List<TopicPartitionOffset> publishSnapshotEvents() {
+    List<CompletableFuture<?>> metadata = new ArrayList<>();
+
+    for (int i = 0; i < kafkaPartitions; i++) {
+      Message message = MessageBuilder
+              .withPayload("")
+              .withHeader(Message.ID, idGenerator.genId().asString())
+              .withHeader(EventMessageHeaders.AGGREGATE_ID, "")
+              .withHeader(EventMessageHeaders.AGGREGATE_TYPE, domainClass.getName())
+              .withHeader(EventMessageHeaders.EVENT_TYPE, SnapshotOffsetEvent.class.getName())
+              .build();
+
+      CompletableFuture<?> recordInfo = eventuateKafkaProducer.send(domainClass.getName(),
+              i,
+              "",
+              JSonMapper.toJson(message));
+
+      metadata.add(recordInfo);
+    }
+
+    return metadata
+            .stream()
+            .map(this::getRecordMetadataFromFuture)
+            .map(recordMetadata ->
+                    new TopicPartitionOffset(recordMetadata.topic(), recordMetadata.partition(), recordMetadata.offset()))
+            .collect(Collectors.toList());
   }
 
   private void publishDomainEntity(T domainEntity) {

@@ -65,8 +65,10 @@ public class IterationOverDomainEntitiesTest {
             snapshotterConfigurationProperties.getDomainRepositoryPageSize(),
             snapshotterConfigurationProperties.getCdcServiceUrl(),
             snapshotterConfigurationProperties.getCdcStatusServiceEndPoint(),
+            null,
             snapshotterConfigurationProperties.getMaxIterationsToCheckCdcProcessing(),
-            snapshotterConfigurationProperties.getTimeoutBetweenCdcProcessingCheckingIterationsInMilliseconds());
+            snapshotterConfigurationProperties.getTimeoutBetweenCdcProcessingCheckingIterationsInMilliseconds(),
+            2);
 
     testRepository.deleteAll();
 

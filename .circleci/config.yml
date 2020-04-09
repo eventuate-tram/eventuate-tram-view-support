@@ -1,0 +1,50 @@
+version: 2
+jobs:
+  build:
+    machine: true
+    working_directory: ~/private-eventuate-tram-view-support
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - private-eventuate-tram-view-support-{{ checksum "gradle.properties" }}
+            - private-eventuate-tram-view-support-
+      - run:
+          command: |
+            . ./.circleci/setenv-circle-ci.sh
+            ./gradlew testClasses
+      - save_cache:
+          paths:
+            - ~/.gradle
+          key: private-eventuate-tram-view-support-{{ checksum "gradle.properties" }}
+      - run:
+          command: |
+            . ./.circleci/setenv-circle-ci.sh
+            ./build-and-test-all-mysql-binlog.sh
+      - run:
+          command: |
+            . ./.circleci/setenv-circle-ci.sh
+            ./build-and-test-all-mysql-polling.sh
+      - run:
+          command: |
+            . ./.circleci/setenv-circle-ci.sh
+            ./build-and-test-all-postgres-polling.sh
+      - run:
+          command: |
+            . ./.circleci/setenv-circle-ci.sh
+            ./build-and-test-all-postgres-wal.sh
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/junit ~/container-logs
+            docker ps -a > ~/container-logs/containers.txt
+            find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/junit/ \;
+            sudo bash -c 'find /var/lib/docker/containers -name "*-json.log" -exec cp {} ~/container-logs \;'
+            sudo bash -c 'find  ~/container-logs -type f -exec chown circleci {} \;'
+          when: always
+      - store_test_results:
+          path: ~/junit
+      - store_artifacts:
+          path: ~/junit
+      - store_artifacts:
+          path: ~/container-logs
