@@ -108,7 +108,7 @@ public class DomainSnapshotExportService<T> {
 
   void iterateOverAllDomainEntities(Consumer<T> callback) {
     for (int i = 0; ; i++) {
-      Page<T> page = domainRepository.findAll(new PageRequest(i, iterationPageSize));
+      Page<T> page = domainRepository.findAll(PageRequest.of(i, iterationPageSize));
       page.forEach(callback);
       if (page.isLast()) {
         break;

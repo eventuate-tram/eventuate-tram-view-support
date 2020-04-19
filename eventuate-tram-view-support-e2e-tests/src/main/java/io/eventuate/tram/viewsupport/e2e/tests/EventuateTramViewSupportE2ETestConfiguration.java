@@ -1,14 +1,13 @@
 package io.eventuate.tram.viewsupport.e2e.tests;
 
-import io.eventuate.messaging.kafka.basic.consumer.EventuateKafkaConsumerConfigurationProperties;
-import io.eventuate.tram.consumer.kafka.EventuateTramKafkaMessageConsumerConfiguration;
+import io.eventuate.messaging.kafka.spring.basic.consumer.EventuateKafkaConsumerSpringConfigurationPropertiesConfiguration;
+import io.eventuate.tram.spring.consumer.kafka.EventuateTramKafkaMessageConsumerConfiguration;
 import io.eventuate.tram.events.common.DomainEvent;
 import io.eventuate.tram.events.common.DomainEventNameMapping;
 import io.eventuate.tram.events.subscriber.DomainEventDispatcher;
 import io.eventuate.tram.messaging.consumer.MessageConsumer;
 import io.eventuate.tram.viewsupport.rebuild.*;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -21,8 +20,9 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 @ComponentScan
 @EnableJpaRepositories
 @EnableMongoRepositories
-@Import({SnapshotConfiguration.class, EventuateTramKafkaMessageConsumerConfiguration.class})
-@EnableConfigurationProperties(EventuateKafkaConsumerConfigurationProperties.class)
+@Import({SnapshotConfiguration.class,
+        EventuateTramKafkaMessageConsumerConfiguration.class,
+        EventuateKafkaConsumerSpringConfigurationPropertiesConfiguration.class})
 public class EventuateTramViewSupportE2ETestConfiguration {
   @Bean
   public TestDomainEntityViewEventConsumer testDomainEntityViewEventConsumer() {
