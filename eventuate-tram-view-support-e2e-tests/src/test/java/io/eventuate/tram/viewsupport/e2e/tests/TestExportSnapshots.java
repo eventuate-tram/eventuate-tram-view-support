@@ -33,9 +33,6 @@ public class TestExportSnapshots {
   @Autowired
   private DomainSnapshotExportService<TestDomainEntity> domainEntityDomainSnapshotExportService;
 
-  @Autowired
-  private SnapshotterConfigurationProperties snapshotterConfigurationProperties;
-
   @LocalServerPort
   private int port;
 
@@ -58,8 +55,6 @@ public class TestExportSnapshots {
     domainEntityDomainSnapshotExportService.exportSnapshots();
 
     TopicPartitionOffset[] topicPartitionOffsets = restTemplate.postForObject(String.format("http://localhost:%s/export/test-domain-entity", port), null, TopicPartitionOffset[].class);
-
-    Assert.assertEquals(snapshotterConfigurationProperties.getKafkaPartitions(), topicPartitionOffsets.length);
 
     for (TopicPartitionOffset topicPartitionOffset : topicPartitionOffsets) {
       Assert.assertTrue(topicPartitionOffset.getOffset() > 0);

@@ -36,7 +36,6 @@ public class DomainSnapshotExportService<T> {
   private String readerName;
   private int maxIterationsToCheckCdcProcessing;
   private int timeoutBetweenCdcProcessingCheckingIterationsInMilliseconds;
-  private int kafkaPartitions;
   private RestTemplate restTemplate = new RestTemplate();
 
   public DomainSnapshotExportService(EventuateKafkaProducer eventuateKafkaProducer,
@@ -51,8 +50,7 @@ public class DomainSnapshotExportService<T> {
                                      String cdcStatusServiceEndPoint,
                                      String readerName,
                                      int maxIterationsToCheckCdcProcessing,
-                                     int timeoutBetweenCdcProcessingCheckingIterationsInMilliseconds,
-                                     int kafkaPartitions) {
+                                     int timeoutBetweenCdcProcessingCheckingIterationsInMilliseconds) {
 
     this.eventuateKafkaProducer = eventuateKafkaProducer;
     this.dbLockService = dbLockService;
@@ -67,7 +65,6 @@ public class DomainSnapshotExportService<T> {
     this.readerName = readerName;
     this.maxIterationsToCheckCdcProcessing = maxIterationsToCheckCdcProcessing;
     this.timeoutBetweenCdcProcessingCheckingIterationsInMilliseconds = timeoutBetweenCdcProcessingCheckingIterationsInMilliseconds;
-    this.kafkaPartitions = kafkaPartitions;
   }
 
   public List<TopicPartitionOffset> exportSnapshots() {
@@ -126,6 +123,8 @@ public class DomainSnapshotExportService<T> {
 
   private List<TopicPartitionOffset> publishSnapshotEvents() {
     List<CompletableFuture<?>> metadata = new ArrayList<>();
+
+    int kafkaPartitions = eventuateKafkaProducer.partitionsFor(domainClass.getName()).size();
 
     for (int i = 0; i < kafkaPartitions; i++) {
       Message message = MessageBuilder
