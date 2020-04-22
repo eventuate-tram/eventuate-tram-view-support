@@ -67,7 +67,6 @@ public class SnapshotConfiguration {
               snapshotterConfigurationProperties.getCdcStatusServiceEndPoint(),
               readerName,
               snapshotterConfigurationProperties.getMaxIterationsToCheckCdcProcessing(),
-              snapshotterConfigurationProperties.getTimeoutBetweenCdcProcessingCheckingIterationsInMilliseconds(),
-              snapshotterConfigurationProperties.getKafkaPartitions());
+              snapshotterConfigurationProperties.getTimeoutBetweenCdcProcessingCheckingIterationsInMilliseconds());
   }
 }
