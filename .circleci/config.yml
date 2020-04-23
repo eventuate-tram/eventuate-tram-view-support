@@ -48,3 +48,7 @@ jobs:
           path: ~/junit
       - store_artifacts:
           path: ~/container-logs
+      - run:
+          name: Publish artifacts
+          command: ./deploy-artifacts.sh
+          when: on_success
