@@ -12,7 +12,7 @@ jobs:
       - run:
           command: |
             . ./.circleci/setenv-circle-ci.sh
-            ./gradlew testClasses
+            ./gradlew testClasses aggregateJavaDocs
       - save_cache:
           paths:
             - ~/.gradle

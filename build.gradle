@@ -1,8 +1,10 @@
 buildscript {
     repositories {
         mavenCentral()
+        jcenter()
     }
     dependencies {
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
         classpath "org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}"
     }
 }
@@ -11,15 +13,29 @@ allprojects {
     group = "io.eventuate.tram.view.support"
 }
 
-subprojects {
+allprojects {
 
     apply plugin: "java"
     apply plugin: 'maven'
+    apply plugin: 'com.jfrog.bintray'
 
     repositories {
         mavenCentral()
         jcenter()
         eventuateMavenRepoUrl.split(',').each { repoUrl -> maven { url repoUrl } }
+    }
+
+    bintray {
+        publish = true
+        user = System.getenv('BINTRAY_USER')
+        key = System.getenv('BINTRAY_KEY')
+        configurations = ['archives']
+        pkg {
+            repo = "eventuate-maven-$bintrayRepoType"
+            name = 'eventuate-tram-view-support'
+            licenses = ['Apache-2.0']
+            vcsUrl = 'https://github.com/eventuate-tram/eventuate-tram-view-support'
+        }
     }
 
     configurations {
@@ -48,6 +64,34 @@ subprojects {
                 }
             }
         }
+    }
+
+    dependencies {
+      // Fix for Javadoc
+      compileOnly 'javax.interceptor:javax.interceptor-api:1.2.2'
+    }
+
+}
+
+
+gradle.projectsEvaluated {
+    task aggregateJavaDocs(type: Javadoc) {
+        description = 'Aggregated Javadoc API documentation of all subprojects.'
+        group = JavaBasePlugin.DOCUMENTATION_GROUP
+        dependsOn subprojects.findAll { subproject -> subproject.plugins.hasPlugin(PublicModulePlugin) }.javadoc
+
+        source subprojects.findAll { subproject -> subproject.plugins.hasPlugin(PublicModulePlugin) }.javadoc.source
+        destinationDir file("$buildDir/docs/javadoc")
+        classpath = files(subprojects.findAll { subproject -> subproject.plugins.hasPlugin(PublicModulePlugin) }.javadoc.classpath)
+    }
+
+    task("aggregateJavaDocsJar", type: org.gradle.api.tasks.bundling.Jar, dependsOn: project.aggregateJavaDocs) {
+        classifier = 'javadoc'
+        from 'build/docs/javadoc'
+    }
+
+    artifacts {
+        archives project.aggregateJavaDocsJar
     }
 
 }
