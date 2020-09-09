@@ -6,8 +6,11 @@ buildscript {
     dependencies {
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
         classpath "org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}"
+        classpath "com.avast.gradle:gradle-docker-compose-plugin:0.13.2"
     }
 }
+
+apply plugin: 'docker-compose'
 
 allprojects {
     group = "io.eventuate.tram.view.support"
@@ -73,6 +76,35 @@ allprojects {
 
 }
 
+dockerCompose {
+    environment.put "EVENTUATE_COMMON_VERSION", eventuateCommonImageVersion
+    environment.put "EVENTUATE_CDC_VERSION", eventuateCdcImageVersion
+    removeOrphans = true
+
+    mysqlbinlog {
+        projectName = null
+        useComposeFiles = ["docker-compose-mysql-binlog.yml"]
+        removeContainers = project.ext.removeContainers
+    }
+
+    mysqlpolling {
+        projectName = null
+        useComposeFiles = ["docker-compose-mysql-polling.yml"]
+        removeContainers = project.ext.removeContainers
+    }
+
+    postgrespolling {
+        projectName = null
+        useComposeFiles = ["docker-compose-postgres-polling.yml"]
+        removeContainers = project.ext.removeContainers
+    }
+
+    postgreswal {
+        projectName = null
+        useComposeFiles = ["docker-compose-postgres-wal.yml"]
+        removeContainers = project.ext.removeContainers
+    }
+}
 
 gradle.projectsEvaluated {
     task aggregateJavaDocs(type: Javadoc) {
