@@ -58,7 +58,10 @@ public class IterationOverDomainEntitiesTest {
   }
 
   public void testIteration(int elements) {
-    DomainSnapshotExportService domainSnapshotExportService = new DomainSnapshotExportService(null,
+    DomainSnapshotExportService domainSnapshotExportService = new DomainSnapshotExportService(
+            null,
+            null,
+            null,
             null,
             null,
             TestEntity.class,

@@ -1,17 +1,19 @@
 package io.eventuate.tram.viewsupport.rebuild;
 
-public class TopicPartitionOffset {
+public class TopicPartitionOffsetMessageId {
   private String topic;
   private int partition;
   private long offset;
+  private String messageId;
 
-  public TopicPartitionOffset() {
+  public TopicPartitionOffsetMessageId() {
   }
 
-  public TopicPartitionOffset(String topic, int partition, long offset) {
+  public TopicPartitionOffsetMessageId(String topic, int partition, long offset, String messageId) {
     this.topic = topic;
     this.partition = partition;
     this.offset = offset;
+    this.messageId = messageId;
   }
 
   public String getTopic() {
@@ -36,5 +38,13 @@ public class TopicPartitionOffset {
 
   public void setOffset(long offset) {
     this.offset = offset;
+  }
+
+  public String getDatabaseId() {
+    return messageId;
+  }
+
+  public void setDatabaseId(String databaseId) {
+    this.messageId = databaseId;
   }
 }

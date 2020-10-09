@@ -1,6 +1,8 @@
 package io.eventuate.tram.viewsupport.rebuild;
 
 import io.eventuate.common.id.IdGenerator;
+import io.eventuate.common.jdbc.EventuateCommonJdbcOperations;
+import io.eventuate.common.jdbc.EventuateSchema;
 import io.eventuate.common.spring.jdbc.EventuateCommonJdbcOperationsConfiguration;
 import io.eventuate.messaging.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.messaging.kafka.producer.EventuateKafkaProducerConfigurationProperties;
@@ -50,12 +52,16 @@ public class SnapshotConfiguration {
   }
 
   @Bean
-  public <T> DomainSnapshotExportServiceFactory<T> domainSnapshotExportServiceFactory(EventuateKafkaProducer eventuateKafkaProducer,
-                                                                               DBLockService dbLockService,
-                                                                               IdGenerator idGenerator,
-                                                                               SnapshotterConfigurationProperties snapshotterConfigurationProperties) {
+  public <T> DomainSnapshotExportServiceFactory<T> domainSnapshotExportServiceFactory(EventuateSchema eventuateSchema,
+                                                                                      EventuateCommonJdbcOperations eventuateCommonJdbcOperations,
+                                                                                      EventuateKafkaProducer eventuateKafkaProducer,
+                                                                                      DBLockService dbLockService,
+                                                                                      IdGenerator idGenerator,
+                                                                                      SnapshotterConfigurationProperties snapshotterConfigurationProperties) {
     return (domainClass, domainRepository, domainEntityToDomainEventConverter, domainTableSpec, readerName) ->
-      new DomainSnapshotExportService<>(eventuateKafkaProducer,
+      new DomainSnapshotExportService<>(eventuateSchema,
+              eventuateCommonJdbcOperations,
+              eventuateKafkaProducer,
               dbLockService,
               idGenerator,
               domainClass,

@@ -27,9 +27,10 @@ services:
     ports:
       - 3306:3306
     environment:
-      - MYSQL_ROOT_PASSWORD=rootpassword
-      - MYSQL_USER=mysqluser
-      - MYSQL_PASSWORD=mysqlpw
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_USER: mysqluser
+      MYSQL_PASSWORD: mysqlpw
+      USE_DB_ID: ${USE_DB_ID}
 
   mongodb:
     image: mongo:3.0.4
@@ -61,3 +62,4 @@ services:
       EVENTUATELOCAL_CDC_POLLING_RETRY_INTERVAL_IN_MILLISECONDS: 500
       EVENTUATELOCAL_CDC_READER_NAME: Reader
       SPRING_PROFILES_ACTIVE: EventuatePolling
+      EVENTUATE_OUTBOX_ID: 1

@@ -1,6 +1,9 @@
 package io.eventuate.tram.viewsupport.rebuild;
 
 import io.eventuate.common.id.IdGenerator;
+import io.eventuate.common.id.Int128;
+import io.eventuate.common.jdbc.EventuateCommonJdbcOperations;
+import io.eventuate.common.jdbc.EventuateSchema;
 import io.eventuate.common.json.mapper.JSonMapper;
 import io.eventuate.messaging.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.tram.events.common.EventMessageHeaders;
@@ -13,8 +16,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
@@ -24,6 +26,8 @@ import java.util.stream.Collectors;
 public class DomainSnapshotExportService<T> {
   protected PagingAndSortingRepository<T, Long> domainRepository;
 
+  private EventuateSchema eventuateSchema;
+  private EventuateCommonJdbcOperations eventuateCommonJdbcOperations;
   private EventuateKafkaProducer eventuateKafkaProducer;
   private DBLockService dbLockService;
   private IdGenerator idGenerator;
@@ -39,7 +43,9 @@ public class DomainSnapshotExportService<T> {
   private int timeoutBetweenCdcProcessingCheckingIterationsInMilliseconds;
   private RestTemplate restTemplate = new RestTemplate();
 
-  public DomainSnapshotExportService(EventuateKafkaProducer eventuateKafkaProducer,
+  public DomainSnapshotExportService(EventuateSchema eventuateSchema,
+                                     EventuateCommonJdbcOperations eventuateCommonJdbcOperations,
+                                     EventuateKafkaProducer eventuateKafkaProducer,
                                      DBLockService dbLockService,
                                      IdGenerator idGenerator,
                                      Class<T> domainClass,
@@ -53,6 +59,8 @@ public class DomainSnapshotExportService<T> {
                                      int maxIterationsToCheckCdcProcessing,
                                      int timeoutBetweenCdcProcessingCheckingIterationsInMilliseconds) {
 
+    this.eventuateSchema = eventuateSchema;
+    this.eventuateCommonJdbcOperations = eventuateCommonJdbcOperations;
     this.eventuateKafkaProducer = eventuateKafkaProducer;
     this.dbLockService = dbLockService;
     this.idGenerator = idGenerator;
@@ -68,18 +76,32 @@ public class DomainSnapshotExportService<T> {
     this.timeoutBetweenCdcProcessingCheckingIterationsInMilliseconds = timeoutBetweenCdcProcessingCheckingIterationsInMilliseconds;
   }
 
-  public List<TopicPartitionOffset> exportSnapshots() {
+  public List<TopicPartitionOffsetMessageId> exportSnapshots() {
+
+    Map<DBLockService.TableSpec, DBLockService.LockType> messageTableLock = Collections
+            .singletonMap(new DBLockService.TableSpec(eventuateSchema.qualifyTable("message")), DBLockService.LockType.WRITE);
+
     DBLockService.LockSpecification lockSpecification = new DBLockService.LockSpecification(domainTableSpec,
-            DBLockService.LockType.READ);
+            DBLockService.LockType.READ, messageTableLock);
 
     return dbLockService.withLockedTables(lockSpecification, this::publishSnapshots);
   }
 
-  private List<TopicPartitionOffset> publishSnapshots() {
+  private List<TopicPartitionOffsetMessageId> publishSnapshots() {
     waitUntilCdcProcessingFinished(readerName);
-    List<TopicPartitionOffset> topicPartitionOffsets = publishSnapshotEvents();
-    iterateOverAllDomainEntities(this::publishDomainEntity);
-    return topicPartitionOffsets;
+    List<TopicPartitionOffsetMessageId> topicPartitionOffsetMessageIds = publishSnapshotEvents();
+
+    Map<Integer, TopicPartitionOffsetMessageId> topicPartitionOffsetMessageIdsSortedByPartition =
+            sortByPartition(topicPartitionOffsetMessageIds);
+
+    iterateOverAllDomainEntities(entity -> publishDomainEntity(entity, topicPartitionOffsetMessageIdsSortedByPartition));
+    return topicPartitionOffsetMessageIds;
+  }
+
+  private Map<Integer, TopicPartitionOffsetMessageId> sortByPartition(List<TopicPartitionOffsetMessageId> topicPartitionOffsetMessageIds) {
+    Map<Integer, TopicPartitionOffsetMessageId> sorted = new HashMap<>();
+    topicPartitionOffsetMessageIds.forEach(tpomi -> sorted.put(tpomi.getPartition(), tpomi));
+    return sorted;
   }
 
   private void waitUntilCdcProcessingFinished(String readerName) {
@@ -122,15 +144,17 @@ public class DomainSnapshotExportService<T> {
     }
   }
 
-  private List<TopicPartitionOffset> publishSnapshotEvents() {
-    List<CompletableFuture<?>> metadata = new ArrayList<>();
+  private List<TopicPartitionOffsetMessageId> publishSnapshotEvents() {
+    Map<String, CompletableFuture<?>> metadata = new HashMap<>();
 
     int kafkaPartitions = eventuateKafkaProducer.partitionsFor(domainClass.getName()).size();
 
     for (int i = 0; i < kafkaPartitions; i++) {
+      String anchorMessageId = generateAnchorMessageId();
+
       Message message = MessageBuilder
               .withPayload("")
-              .withHeader(Message.ID, idGenerator.genId().asString())
+              .withHeader(Message.ID, anchorMessageId)
               .withHeader(EventMessageHeaders.AGGREGATE_ID, "")
               .withHeader(EventMessageHeaders.AGGREGATE_TYPE, domainClass.getName())
               .withHeader(EventMessageHeaders.EVENT_TYPE, SnapshotOffsetEvent.class.getName())
@@ -143,23 +167,36 @@ public class DomainSnapshotExportService<T> {
               "",
               JSonMapper.toJson(message));
 
-      metadata.add(recordInfo);
+      metadata.put(anchorMessageId, recordInfo);
     }
 
     return metadata
+            .entrySet()
             .stream()
-            .map(this::getRecordMetadataFromFuture)
-            .map(recordMetadata ->
-                    new TopicPartitionOffset(recordMetadata.topic(), recordMetadata.partition(), recordMetadata.offset()))
+            .map(e -> {
+              RecordMetadata recordMetadata = getRecordMetadataFromFuture(e.getValue());
+              return new TopicPartitionOffsetMessageId(recordMetadata.topic(), recordMetadata.partition(), recordMetadata.offset(), e.getKey());
+            })
             .collect(Collectors.toList());
   }
 
-  private void publishDomainEntity(T domainEntity) {
+  private void publishDomainEntity(T domainEntity, Map<Integer, TopicPartitionOffsetMessageId> topicPartitionOffsetMessageIds) {
     DomainEventWithEntityId domainEventWithEntityId = domainEntityToDomainEventConverter.apply(domainEntity);
+
+    int partition = eventuateKafkaProducer.partitionFor(domainClass.getName(), domainEventWithEntityId.getEntityId().toString());
+
+    TopicPartitionOffsetMessageId topicPartitionOffsetMessageId = topicPartitionOffsetMessageIds.get(partition);
+
+    String messageId = idGenerator
+            .incrementIdIfPossible(Int128.fromString(topicPartitionOffsetMessageId.getDatabaseId()))
+            .map(Int128::asString)
+            .orElseGet(this::generateAnchorMessageId);
+
+    topicPartitionOffsetMessageId.setDatabaseId(messageId);
 
     Message message = MessageBuilder
             .withPayload(JSonMapper.toJson(domainEventWithEntityId.getDomainEvent()))
-            .withHeader(Message.ID, idGenerator.genId().asString())
+            .withHeader(Message.ID, messageId)
             .withHeader(EventMessageHeaders.AGGREGATE_ID, domainEventWithEntityId.getEntityId().toString())
             .withHeader(EventMessageHeaders.AGGREGATE_TYPE, domainClass.getName())
             .withHeader(EventMessageHeaders.EVENT_TYPE, domainEventWithEntityId.getDomainEvent().getClass().getName())
@@ -168,5 +205,10 @@ public class DomainSnapshotExportService<T> {
     eventuateKafkaProducer.send(domainClass.getName(),
             domainEventWithEntityId.getEntityId().toString(),
             JSonMapper.toJson(message));
+  }
+
+  private String generateAnchorMessageId() {
+    return eventuateCommonJdbcOperations.insertIntoMessageTable(idGenerator,
+              "", "", Collections.emptyMap(), eventuateSchema, true);
   }
 }
