@@ -1,7 +1,6 @@
 package io.eventuate.tram.viewsupport.rebuild;
 
 import io.eventuate.common.id.IdGenerator;
-import io.eventuate.common.id.Int128;
 import io.eventuate.common.jdbc.EventuateCommonJdbcOperations;
 import io.eventuate.common.jdbc.EventuateSchema;
 import io.eventuate.common.json.mapper.JSonMapper;
@@ -76,7 +75,7 @@ public class DomainSnapshotExportService<T> {
     this.timeoutBetweenCdcProcessingCheckingIterationsInMilliseconds = timeoutBetweenCdcProcessingCheckingIterationsInMilliseconds;
   }
 
-  public List<TopicPartitionOffsetMessageId> exportSnapshots() {
+  public List<SnapshotMetadata> exportSnapshots() {
 
     Map<DBLockService.TableSpec, DBLockService.LockType> messageTableLock = Collections
             .singletonMap(new DBLockService.TableSpec(eventuateSchema.qualifyTable("message")), DBLockService.LockType.WRITE);
@@ -87,21 +86,17 @@ public class DomainSnapshotExportService<T> {
     return dbLockService.withLockedTables(lockSpecification, this::publishSnapshots);
   }
 
-  private List<TopicPartitionOffsetMessageId> publishSnapshots() {
+  private List<SnapshotMetadata> publishSnapshots() {
     waitUntilCdcProcessingFinished(readerName);
-    List<TopicPartitionOffsetMessageId> topicPartitionOffsetMessageIds = publishSnapshotEvents();
 
-    Map<Integer, TopicPartitionOffsetMessageId> topicPartitionOffsetMessageIdsSortedByPartition =
-            sortByPartition(topicPartitionOffsetMessageIds);
+    ViewSupportIdGenerator viewSupportIdGenerator =
+            new ViewSupportIdGenerator(eventuateSchema, eventuateCommonJdbcOperations, idGenerator);
 
-    iterateOverAllDomainEntities(entity -> publishDomainEntity(entity, topicPartitionOffsetMessageIdsSortedByPartition));
-    return topicPartitionOffsetMessageIds;
-  }
+    List<SnapshotMetadata> snapshotMetadata = publishSnapshotEvents(viewSupportIdGenerator);
 
-  private Map<Integer, TopicPartitionOffsetMessageId> sortByPartition(List<TopicPartitionOffsetMessageId> topicPartitionOffsetMessageIds) {
-    Map<Integer, TopicPartitionOffsetMessageId> sorted = new HashMap<>();
-    topicPartitionOffsetMessageIds.forEach(tpomi -> sorted.put(tpomi.getPartition(), tpomi));
-    return sorted;
+    iterateOverAllDomainEntities(entity -> publishDomainEntity(entity, viewSupportIdGenerator));
+
+    return snapshotMetadata;
   }
 
   private void waitUntilCdcProcessingFinished(String readerName) {
@@ -144,17 +139,15 @@ public class DomainSnapshotExportService<T> {
     }
   }
 
-  private List<TopicPartitionOffsetMessageId> publishSnapshotEvents() {
-    Map<String, CompletableFuture<?>> metadata = new HashMap<>();
+  private List<SnapshotMetadata> publishSnapshotEvents(ViewSupportIdGenerator viewSupportIdGenerator) {
+    List<CompletableFuture<?>> metadata = new ArrayList<>();
 
     int kafkaPartitions = eventuateKafkaProducer.partitionsFor(domainClass.getName()).size();
 
     for (int i = 0; i < kafkaPartitions; i++) {
-      String anchorMessageId = generateAnchorMessageId();
-
       Message message = MessageBuilder
               .withPayload("")
-              .withHeader(Message.ID, anchorMessageId)
+              .withHeader(Message.ID, viewSupportIdGenerator.generateId())
               .withHeader(EventMessageHeaders.AGGREGATE_ID, "")
               .withHeader(EventMessageHeaders.AGGREGATE_TYPE, domainClass.getName())
               .withHeader(EventMessageHeaders.EVENT_TYPE, SnapshotOffsetEvent.class.getName())
@@ -167,48 +160,33 @@ public class DomainSnapshotExportService<T> {
               "",
               JSonMapper.toJson(message));
 
-      metadata.put(anchorMessageId, recordInfo);
+      metadata.add(recordInfo);
     }
 
     return metadata
-            .entrySet()
             .stream()
-            .map(e -> {
-              RecordMetadata recordMetadata = getRecordMetadataFromFuture(e.getValue());
-              return new TopicPartitionOffsetMessageId(recordMetadata.topic(), recordMetadata.partition(), recordMetadata.offset(), e.getKey());
+            .map(meta -> {
+              RecordMetadata recordMetadata = getRecordMetadataFromFuture(meta);
+              return new SnapshotMetadata(recordMetadata.topic(), recordMetadata.partition(), recordMetadata.offset());
             })
             .collect(Collectors.toList());
   }
 
-  private void publishDomainEntity(T domainEntity, Map<Integer, TopicPartitionOffsetMessageId> topicPartitionOffsetMessageIds) {
+  private void publishDomainEntity(T domainEntity, ViewSupportIdGenerator viewSupportIdGenerator) {
     DomainEventWithEntityId domainEventWithEntityId = domainEntityToDomainEventConverter.apply(domainEntity);
-
-    int partition = eventuateKafkaProducer.partitionFor(domainClass.getName(), domainEventWithEntityId.getEntityId().toString());
-
-    TopicPartitionOffsetMessageId topicPartitionOffsetMessageId = topicPartitionOffsetMessageIds.get(partition);
-
-    String messageId = idGenerator
-            .incrementIdIfPossible(Int128.fromString(topicPartitionOffsetMessageId.getDatabaseId()))
-            .map(Int128::asString)
-            .orElseGet(this::generateAnchorMessageId);
-
-    topicPartitionOffsetMessageId.setDatabaseId(messageId);
 
     Message message = MessageBuilder
             .withPayload(JSonMapper.toJson(domainEventWithEntityId.getDomainEvent()))
-            .withHeader(Message.ID, messageId)
+            .withHeader(Message.ID, viewSupportIdGenerator.generateId())
             .withHeader(EventMessageHeaders.AGGREGATE_ID, domainEventWithEntityId.getEntityId().toString())
             .withHeader(EventMessageHeaders.AGGREGATE_TYPE, domainClass.getName())
             .withHeader(EventMessageHeaders.EVENT_TYPE, domainEventWithEntityId.getDomainEvent().getClass().getName())
+            .withHeader(Message.DESTINATION,domainClass.getName())
+            .withHeader(Message.DATE, HttpDateHeaderFormatUtil.nowAsHttpDateString())
             .build();
 
     eventuateKafkaProducer.send(domainClass.getName(),
             domainEventWithEntityId.getEntityId().toString(),
             JSonMapper.toJson(message));
-  }
-
-  private String generateAnchorMessageId() {
-    return eventuateCommonJdbcOperations.insertIntoMessageTable(idGenerator,
-              "", "", Collections.emptyMap(), eventuateSchema, true);
   }
 }
