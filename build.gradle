@@ -7,10 +7,12 @@ buildscript {
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
         classpath "org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}"
         classpath "com.avast.gradle:gradle-docker-compose-plugin:0.13.2"
+        classpath "io.eventuate.plugins.gradle:eventuate-plugins-gradle-publish:$eventuatePluginsGradleVersion"
     }
 }
 
 apply plugin: 'docker-compose'
+apply plugin: "io.eventuate.plugins.gradle.publish.EventuatePublish"
 
 allprojects {
     group = "io.eventuate.tram.view.support"
@@ -20,7 +22,6 @@ allprojects {
 
     apply plugin: "java"
     apply plugin: 'maven'
-    apply plugin: 'com.jfrog.bintray'
 
     repositories {
         mavenCentral()
@@ -28,52 +29,10 @@ allprojects {
         eventuateMavenRepoUrl.split(',').each { repoUrl -> maven { url repoUrl } }
     }
 
-    bintray {
-        publish = true
-        user = System.getenv('BINTRAY_USER')
-        key = System.getenv('BINTRAY_KEY')
-        configurations = ['archives']
-        pkg {
-            repo = "eventuate-maven-$bintrayRepoType"
-            name = 'eventuate-tram-view-support'
-            licenses = ['Apache-2.0']
-            vcsUrl = 'https://github.com/eventuate-tram/eventuate-tram-view-support'
-        }
-    }
-
-    configurations {
-        deployerJars
-    }
-
-    dependencies {
-        deployerJars 'org.springframework.build:aws-maven:5.0.0.RELEASE'
-    }
-
-    uploadArchives {
-        repositories {
-            mavenDeployer {
-                configuration = configurations.deployerJars
-                repository(url: deployUrl) {
-                  authentication(userName: System.getenv('S3_REPO_AWS_ACCESS_KEY'), password: System.getenv('S3_REPO_AWS_SECRET_ACCESS_KEY'))
-                }
-                pom.project {
-                    licenses {
-                        license {
-                            name 'The Apache Software License, Version 2.0'
-                            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                            distribution 'repo'
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     dependencies {
       // Fix for Javadoc
       compileOnly 'javax.interceptor:javax.interceptor-api:1.2.2'
     }
-
 }
 
 dockerCompose {
