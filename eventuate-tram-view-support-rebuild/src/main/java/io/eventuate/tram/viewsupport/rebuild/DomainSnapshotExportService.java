@@ -1,6 +1,8 @@
 package io.eventuate.tram.viewsupport.rebuild;
 
 import io.eventuate.common.id.IdGenerator;
+import io.eventuate.common.jdbc.EventuateCommonJdbcOperations;
+import io.eventuate.common.jdbc.EventuateSchema;
 import io.eventuate.common.json.mapper.JSonMapper;
 import io.eventuate.messaging.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.tram.events.common.EventMessageHeaders;
@@ -13,8 +15,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
@@ -24,6 +25,8 @@ import java.util.stream.Collectors;
 public class DomainSnapshotExportService<T> {
   protected PagingAndSortingRepository<T, Long> domainRepository;
 
+  private EventuateSchema eventuateSchema;
+  private EventuateCommonJdbcOperations eventuateCommonJdbcOperations;
   private EventuateKafkaProducer eventuateKafkaProducer;
   private DBLockService dbLockService;
   private IdGenerator idGenerator;
@@ -39,7 +42,9 @@ public class DomainSnapshotExportService<T> {
   private int timeoutBetweenCdcProcessingCheckingIterationsInMilliseconds;
   private RestTemplate restTemplate = new RestTemplate();
 
-  public DomainSnapshotExportService(EventuateKafkaProducer eventuateKafkaProducer,
+  public DomainSnapshotExportService(EventuateSchema eventuateSchema,
+                                     EventuateCommonJdbcOperations eventuateCommonJdbcOperations,
+                                     EventuateKafkaProducer eventuateKafkaProducer,
                                      DBLockService dbLockService,
                                      IdGenerator idGenerator,
                                      Class<T> domainClass,
@@ -53,6 +58,8 @@ public class DomainSnapshotExportService<T> {
                                      int maxIterationsToCheckCdcProcessing,
                                      int timeoutBetweenCdcProcessingCheckingIterationsInMilliseconds) {
 
+    this.eventuateSchema = eventuateSchema;
+    this.eventuateCommonJdbcOperations = eventuateCommonJdbcOperations;
     this.eventuateKafkaProducer = eventuateKafkaProducer;
     this.dbLockService = dbLockService;
     this.idGenerator = idGenerator;
@@ -68,18 +75,28 @@ public class DomainSnapshotExportService<T> {
     this.timeoutBetweenCdcProcessingCheckingIterationsInMilliseconds = timeoutBetweenCdcProcessingCheckingIterationsInMilliseconds;
   }
 
-  public List<TopicPartitionOffset> exportSnapshots() {
+  public List<SnapshotMetadata> exportSnapshots() {
+
+    Map<DBLockService.TableSpec, DBLockService.LockType> messageTableLock = Collections
+            .singletonMap(new DBLockService.TableSpec(eventuateSchema.qualifyTable("message")), DBLockService.LockType.WRITE);
+
     DBLockService.LockSpecification lockSpecification = new DBLockService.LockSpecification(domainTableSpec,
-            DBLockService.LockType.READ);
+            DBLockService.LockType.READ, messageTableLock);
 
     return dbLockService.withLockedTables(lockSpecification, this::publishSnapshots);
   }
 
-  private List<TopicPartitionOffset> publishSnapshots() {
+  private List<SnapshotMetadata> publishSnapshots() {
     waitUntilCdcProcessingFinished(readerName);
-    List<TopicPartitionOffset> topicPartitionOffsets = publishSnapshotEvents();
-    iterateOverAllDomainEntities(this::publishDomainEntity);
-    return topicPartitionOffsets;
+
+    ViewSupportIdGenerator viewSupportIdGenerator =
+            new ViewSupportIdGenerator(eventuateSchema, eventuateCommonJdbcOperations, idGenerator);
+
+    List<SnapshotMetadata> snapshotMetadata = publishSnapshotEvents(viewSupportIdGenerator);
+
+    iterateOverAllDomainEntities(entity -> publishDomainEntity(entity, viewSupportIdGenerator));
+
+    return snapshotMetadata;
   }
 
   private void waitUntilCdcProcessingFinished(String readerName) {
@@ -122,7 +139,7 @@ public class DomainSnapshotExportService<T> {
     }
   }
 
-  private List<TopicPartitionOffset> publishSnapshotEvents() {
+  private List<SnapshotMetadata> publishSnapshotEvents(ViewSupportIdGenerator viewSupportIdGenerator) {
     List<CompletableFuture<?>> metadata = new ArrayList<>();
 
     int kafkaPartitions = eventuateKafkaProducer.partitionsFor(domainClass.getName()).size();
@@ -130,7 +147,7 @@ public class DomainSnapshotExportService<T> {
     for (int i = 0; i < kafkaPartitions; i++) {
       Message message = MessageBuilder
               .withPayload("")
-              .withHeader(Message.ID, idGenerator.genId().asString())
+              .withHeader(Message.ID, viewSupportIdGenerator.generateId())
               .withHeader(EventMessageHeaders.AGGREGATE_ID, "")
               .withHeader(EventMessageHeaders.AGGREGATE_TYPE, domainClass.getName())
               .withHeader(EventMessageHeaders.EVENT_TYPE, SnapshotOffsetEvent.class.getName())
@@ -148,21 +165,24 @@ public class DomainSnapshotExportService<T> {
 
     return metadata
             .stream()
-            .map(this::getRecordMetadataFromFuture)
-            .map(recordMetadata ->
-                    new TopicPartitionOffset(recordMetadata.topic(), recordMetadata.partition(), recordMetadata.offset()))
+            .map(meta -> {
+              RecordMetadata recordMetadata = getRecordMetadataFromFuture(meta);
+              return new SnapshotMetadata(recordMetadata.topic(), recordMetadata.partition(), recordMetadata.offset());
+            })
             .collect(Collectors.toList());
   }
 
-  private void publishDomainEntity(T domainEntity) {
+  private void publishDomainEntity(T domainEntity, ViewSupportIdGenerator viewSupportIdGenerator) {
     DomainEventWithEntityId domainEventWithEntityId = domainEntityToDomainEventConverter.apply(domainEntity);
 
     Message message = MessageBuilder
             .withPayload(JSonMapper.toJson(domainEventWithEntityId.getDomainEvent()))
-            .withHeader(Message.ID, idGenerator.genId().asString())
+            .withHeader(Message.ID, viewSupportIdGenerator.generateId())
             .withHeader(EventMessageHeaders.AGGREGATE_ID, domainEventWithEntityId.getEntityId().toString())
             .withHeader(EventMessageHeaders.AGGREGATE_TYPE, domainClass.getName())
             .withHeader(EventMessageHeaders.EVENT_TYPE, domainEventWithEntityId.getDomainEvent().getClass().getName())
+            .withHeader(Message.DESTINATION,domainClass.getName())
+            .withHeader(Message.DATE, HttpDateHeaderFormatUtil.nowAsHttpDateString())
             .build();
 
     eventuateKafkaProducer.send(domainClass.getName(),

@@ -1,8 +1,7 @@
 package io.eventuate.tram.viewsupport.e2e.tests;
 
 import io.eventuate.tram.viewsupport.rebuild.DomainSnapshotExportService;
-import io.eventuate.tram.viewsupport.rebuild.TopicPartitionOffset;
-import io.eventuate.tram.viewsupport.rebuild.SnapshotterConfigurationProperties;
+import io.eventuate.tram.viewsupport.rebuild.SnapshotMetadata;
 import io.eventuate.util.test.async.Eventually;
 import org.junit.Assert;
 import org.junit.Test;
@@ -54,11 +53,11 @@ public class TestExportSnapshots {
 
     domainEntityDomainSnapshotExportService.exportSnapshots();
 
-    TopicPartitionOffset[] topicPartitionOffsets = restTemplate.postForObject(String.format("http://localhost:%s/export/test-domain-entity", port), null, TopicPartitionOffset[].class);
+    SnapshotMetadata[] snapshotMetadata = restTemplate.postForObject(String.format("http://localhost:%s/export/test-domain-entity", port), null, SnapshotMetadata[].class);
 
-    for (TopicPartitionOffset topicPartitionOffset : topicPartitionOffsets) {
-      Assert.assertTrue(topicPartitionOffset.getOffset() > 0);
-      Assert.assertEquals(TestDomainEntity.class.getName(), topicPartitionOffset.getTopic());
+    for (SnapshotMetadata meta : snapshotMetadata) {
+      Assert.assertTrue(meta.getOffset() > 0);
+      Assert.assertEquals(TestDomainEntity.class.getName(), meta.getTopic());
     }
 
     Eventually.eventually(() -> {

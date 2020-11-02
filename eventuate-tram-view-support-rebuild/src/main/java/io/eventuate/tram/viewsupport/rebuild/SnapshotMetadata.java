@@ -1,14 +1,14 @@
 package io.eventuate.tram.viewsupport.rebuild;
 
-public class TopicPartitionOffset {
+public class SnapshotMetadata {
   private String topic;
   private int partition;
   private long offset;
 
-  public TopicPartitionOffset() {
+  public SnapshotMetadata() {
   }
 
-  public TopicPartitionOffset(String topic, int partition, long offset) {
+  public SnapshotMetadata(String topic, int partition, long offset) {
     this.topic = topic;
     this.partition = partition;
     this.offset = offset;
