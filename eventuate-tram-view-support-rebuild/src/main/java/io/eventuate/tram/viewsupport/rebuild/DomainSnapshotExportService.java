@@ -8,7 +8,7 @@ import io.eventuate.messaging.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.tram.events.common.EventMessageHeaders;
 import io.eventuate.tram.messaging.common.Message;
 import io.eventuate.tram.messaging.producer.MessageBuilder;
-import io.eventuate.tram.messaging.producer.common.HttpDateHeaderFormatUtil;
+import io.eventuate.tram.messaging.producer.HttpDateHeaderFormatUtil;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
