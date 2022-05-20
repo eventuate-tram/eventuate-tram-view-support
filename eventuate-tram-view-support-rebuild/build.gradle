@@ -1,16 +1,16 @@
 
 dependencies {
-    compile "io.eventuate.messaging.kafka:eventuate-messaging-kafka-spring-producer:$eventuateMessagingKafkaVersion"
-    compile "io.eventuate.tram.core:eventuate-tram-spring-jdbc-kafka:$eventuateTramVersion"
-    compile "io.eventuate.tram.core:eventuate-tram-spring-events:$eventuateTramVersion"
-    compile "io.eventuate.tram.core:eventuate-tram-messaging-producer-common:$eventuateTramVersion"
-    compile "commons-lang:commons-lang:2.6"
-    compile "org.springframework.boot:spring-boot-starter-web:$springBootVersion"
-    compile "org.springframework.boot:spring-boot-starter-data-jpa:$springBootVersion"
-    compile 'javax.el:javax.el-api:3.0.0'
-    compile 'commons-beanutils:commons-beanutils:1.8.3'
+    implementation "io.eventuate.messaging.kafka:eventuate-messaging-kafka-spring-producer:$eventuateMessagingKafkaVersion"
+    implementation "io.eventuate.tram.core:eventuate-tram-spring-jdbc-kafka:$eventuateTramVersion"
+    implementation "io.eventuate.tram.core:eventuate-tram-spring-events:$eventuateTramVersion"
+    implementation "io.eventuate.tram.core:eventuate-tram-messaging-producer-common:$eventuateTramVersion"
+    implementation "commons-lang:commons-lang:2.6"
+    implementation "org.springframework.boot:spring-boot-starter-web:$springBootVersion"
+    implementation "org.springframework.boot:spring-boot-starter-data-jpa:$springBootVersion"
+    implementation 'javax.el:javax.el-api:3.0.0'
+    implementation 'commons-beanutils:commons-beanutils:1.8.3'
 
-    testCompile 'org.mockito:mockito-all:1.10.19'
-    testCompile "junit:junit:4.12"
-    testCompile "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
+    testImplementation 'org.mockito:mockito-all:1.10.19'
+    testImplementation "junit:junit:4.12"
+    testImplementation "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
 }

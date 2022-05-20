@@ -23,6 +23,10 @@ allprojects {
 
 allprojects {
 
+    if (project.name.endsWith("-bom")) {
+      return;
+    }
+
     apply plugin: "java"
 
     repositories {
@@ -35,6 +39,8 @@ allprojects {
       // Fix for Javadoc
       compileOnly 'javax.interceptor:javax.interceptor-api:1.2.2'
     }
+
+
 }
 
 dockerCompose {
@@ -68,6 +74,7 @@ dockerCompose {
         removeContainers = project.ext.removeContainers
     }
 }
+
 
 gradle.projectsEvaluated {
     task aggregateJavaDocs(type: Javadoc) {

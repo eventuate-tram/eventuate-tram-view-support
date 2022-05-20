@@ -1,9 +1,13 @@
 
 dependencies {
-    compile project(":eventuate-tram-view-support-rebuild")
-    compile "org.springframework.boot:spring-boot-starter-data-mongodb:$springBootVersion"
+    implementation project(":eventuate-tram-view-support-rebuild")
+    implementation "org.springframework.boot:spring-boot-starter-data-mongodb:$springBootVersion"
+    implementation "org.springframework.boot:spring-boot-starter-web:$springBootVersion"
+    implementation "io.eventuate.tram.core:eventuate-tram-spring-events:$eventuateTramVersion"
+    implementation "org.springframework.boot:spring-boot-starter-data-jpa:$springBootVersion"
+    implementation "io.eventuate.tram.core:eventuate-tram-spring-jdbc-kafka:$eventuateTramVersion"
 
-    testCompile "io.eventuate.util:eventuate-util-test:$eventuateUtilVersion"
-    testCompile "junit:junit:4.12"
-    testCompile "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
+    testImplementation "io.eventuate.util:eventuate-util-test:$eventuateUtilVersion"
+    testImplementation "junit:junit:4.12"
+    testImplementation "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
 }
