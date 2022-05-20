@@ -7,7 +7,7 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - eventuate-tram-view-support-{{ checksum "gradle.properties" }}
+            - eventuate-tram-view-support-{{ checksum "gradle.properties" }}-{{ checksum "gradle/wrapper/gradle-wrapper.properties" }}
             - eventuate-tram-view-support-
       - run:
           command: |
@@ -16,7 +16,7 @@ jobs:
       - save_cache:
           paths:
             - ~/.gradle
-          key: eventuate-tram-view-support-{{ checksum "gradle.properties" }}
+          key: eventuate-tram-view-support-{{ checksum "gradle.properties" }}-{{ checksum "gradle/wrapper/gradle-wrapper.properties" }}
       - run:
           command: |
             . ./.circleci/setenv-circle-ci.sh
