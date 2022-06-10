@@ -1,3 +1,5 @@
+rootProject.name="eventuate-tram-view-support"
+
 include 'eventuate-tram-view-support-rebuild'
 include 'eventuate-tram-view-support-e2e-tests'
 include 'eventuate-tram-view-support-bom'
