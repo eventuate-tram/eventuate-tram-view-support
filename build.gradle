@@ -9,7 +9,7 @@ buildscript {
     }
     dependencies {
         classpath "org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}"
-        classpath "com.avast.gradle:gradle-docker-compose-plugin:0.13.2"
+        classpath "com.avast.gradle:gradle-docker-compose-plugin:$dockerComposePluginVersion"
         classpath "io.eventuate.plugins.gradle:eventuate-plugins-gradle-publish:$eventuatePluginsGradleVersion"
     }
 }
@@ -56,25 +56,25 @@ dockerCompose {
     mysqlbinlog {
         projectName = null
         useComposeFiles = ["docker-compose-mysql-binlog.yml"]
-        removeContainers = project.ext.removeContainers
+        removeContainers = project.ext.removeContainers.toBoolean()
     }
 
     mysqlpolling {
         projectName = null
         useComposeFiles = ["docker-compose-mysql-polling.yml"]
-        removeContainers = project.ext.removeContainers
+        removeContainers = project.ext.removeContainers.toBoolean()
     }
 
     postgrespolling {
         projectName = null
         useComposeFiles = ["docker-compose-postgres-polling.yml"]
-        removeContainers = project.ext.removeContainers
+        removeContainers = project.ext.removeContainers.toBoolean()
     }
 
     postgreswal {
         projectName = null
         useComposeFiles = ["docker-compose-postgres-wal.yml"]
-        removeContainers = project.ext.removeContainers
+        removeContainers = project.ext.removeContainers.toBoolean()
     }
 }
 
