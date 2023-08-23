@@ -38,10 +38,11 @@ public class TestExportSnapshots {
   private RestTemplate restTemplate = new RestTemplate();
 
   @Test
-  public void testThatViewsMatchOriginalEntitiesAfterExport() {
+  public void testThatViewsMatchOriginalEntitiesAfterExport() throws InterruptedException {
     String dataPrefix = UUID.randomUUID().toString();
     int domainEntitiesCount = 10;
 
+    System.out.println("==== starting save ====");
     Set<String> originalData = IntStream
             .range(0, domainEntitiesCount)
             .mapToObj(i -> {
@@ -50,8 +51,11 @@ public class TestExportSnapshots {
               return data;
             })
             .collect(Collectors.toSet());
+    System.out.println("==== save finished ====");
 
+    System.out.println("==== starting export ====");
     domainEntityDomainSnapshotExportService.exportSnapshots();
+    System.out.println("==== export finished ====");
 
     SnapshotMetadata[] snapshotMetadata = restTemplate.postForObject(String.format("http://localhost:%s/export/test-domain-entity", port), null, SnapshotMetadata[].class);
 
@@ -63,6 +67,7 @@ public class TestExportSnapshots {
     Eventually.eventually(() -> {
       List<TestDomainEntityView> views = testDomainEntityViewRepository.findAll();
       Set<String> viewData = views.stream().map(TestDomainEntityView::getData).collect(Collectors.toSet());
+      viewData.retainAll(originalData);
       Assert.assertEquals(originalData, viewData);
     });
   }

@@ -175,17 +175,19 @@ public class DomainSnapshotExportService<T> {
   private void publishDomainEntity(T domainEntity, ViewSupportIdGenerator viewSupportIdGenerator) {
     DomainEventWithEntityId domainEventWithEntityId = domainEntityToDomainEventConverter.apply(domainEntity);
 
+    String domainClassName = domainClass.getName();
+
     Message message = MessageBuilder
             .withPayload(JSonMapper.toJson(domainEventWithEntityId.getDomainEvent()))
             .withHeader(Message.ID, viewSupportIdGenerator.generateId())
             .withHeader(EventMessageHeaders.AGGREGATE_ID, domainEventWithEntityId.getEntityId().toString())
-            .withHeader(EventMessageHeaders.AGGREGATE_TYPE, domainClass.getName())
+            .withHeader(EventMessageHeaders.AGGREGATE_TYPE, domainClassName)
             .withHeader(EventMessageHeaders.EVENT_TYPE, domainEventWithEntityId.getDomainEvent().getClass().getName())
-            .withHeader(Message.DESTINATION,domainClass.getName())
+            .withHeader(Message.DESTINATION, domainClassName)
             .withHeader(Message.DATE, HttpDateHeaderFormatUtil.nowAsHttpDateString())
             .build();
 
-    eventuateKafkaProducer.send(domainClass.getName(),
+    eventuateKafkaProducer.send(domainClassName,
             domainEventWithEntityId.getEntityId().toString(),
             JSonMapper.toJson(message));
   }
