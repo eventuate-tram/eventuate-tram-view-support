@@ -1,5 +1,26 @@
 version: 2
 jobs:
+  build:
+    machine: true
+    working_directory: ~/eventuate-tram-view-support
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - eventuate-tram-view-support-{{ checksum "gradle.properties" }}-{{ checksum "gradle/wrapper/gradle-wrapper.properties" }}
+            - eventuate-tram-view-support-
+      - run:
+          command: |
+            . ./.circleci/setenv-circle-ci.sh
+            ./gradlew testClasses aggregateJavaDocs
+      - save_cache:
+          paths:
+            - ~/.gradle
+          key: eventuate-tram-view-support-{{ checksum "gradle.properties" }}-{{ checksum "gradle/wrapper/gradle-wrapper.properties" }}
+      - run:
+          name: Save test results
+          command: ./.circleci/save-containers-and-tests.sh
+          when: always
   build-and-test-mysql-binlog:
     machine: true
     working_directory: ~/eventuate-tram-view-support
@@ -42,13 +63,6 @@ jobs:
           name: Save test results
           command: ./.circleci/save-containers-and-tests.sh
           when: always
-      - store_test_results:
-          path: ~/junit
-      - store_artifacts:
-          path: ~/junit
-      - store_artifacts:
-          path: ~/container-logs
-
   build-and-test-postgres-polling:
     machine: true
     working_directory: ~/eventuate-tram-view-support
@@ -70,13 +84,6 @@ jobs:
           name: Save test results
           command: ./.circleci/save-containers-and-tests.sh
           when: always
-      - store_test_results:
-          path: ~/junit
-      - store_artifacts:
-          path: ~/junit
-      - store_artifacts:
-          path: ~/container-logs
-
   build-and-test-postgres-wal:
     machine: true
     working_directory: ~/eventuate-tram-view-support
@@ -98,14 +105,6 @@ jobs:
           name: Save test results
           command: ./.circleci/save-containers-and-tests.sh
           when: always
-
-      - store_test_results:
-          path: ~/junit
-      - store_artifacts:
-          path: ~/junit
-      - store_artifacts:
-          path: ~/container-logs
-
   publish-artifacts:
     machine: true
     working_directory: ~/eventuate-tram-view-support
@@ -118,12 +117,14 @@ workflows:
   version: 2
   build-test-and-deploy:
     jobs:
+      - build
       - build-and-test-mysql-binlog
       - build-and-test-mysql-polling
       - build-and-test-postgres-polling
       - build-and-test-postgres-wal
       - publish-artifacts:
           requires:
+            - build
             - build-and-test-mysql-binlog
             - build-and-test-mysql-polling
             - build-and-test-postgres-polling
