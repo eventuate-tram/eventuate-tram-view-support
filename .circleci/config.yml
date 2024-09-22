@@ -1,7 +1,8 @@
 version: 2
 jobs:
   build:
-    machine: true
+    machine:
+      image: ubuntu-2204:2024.01.1
     working_directory: ~/eventuate-tram-view-support
     steps:
       - checkout
