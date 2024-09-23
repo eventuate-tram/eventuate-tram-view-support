@@ -22,7 +22,7 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
   mysql:
-    image: eventuateio/eventuate-mysql:$EVENTUATE_COMMON_VERSION
+    image: eventuateio/eventuate-mysql8:$EVENTUATE_COMMON_VERSION
     ports:
       - 3306:3306
     environment:
