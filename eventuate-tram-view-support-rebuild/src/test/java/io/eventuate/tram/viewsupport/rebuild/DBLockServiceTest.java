@@ -1,8 +1,8 @@
 package io.eventuate.tram.viewsupport.rebuild;
 
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.PostgreSQL82Dialect;
-import org.junit.Test;
+import org.hibernate.dialect.PostgreSQLDialect;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.jdbc.core.JdbcTemplate;
 
@@ -14,7 +14,7 @@ public class DBLockServiceTest {
   public void testPostgresQuery() {
     JdbcTemplate jdbcTemplate = Mockito.mock(JdbcTemplate.class);
     DBDialectDeterminer dbDialectDeterminer = Mockito.mock(DBDialectDeterminer.class);
-    Mockito.when(dbDialectDeterminer.getDialect()).thenReturn(new PostgreSQL82Dialect());
+    Mockito.when(dbDialectDeterminer.getDialect()).thenReturn(new PostgreSQLDialect());
     DBLockService dbLockService = new DBLockService(jdbcTemplate, dbDialectDeterminer);
 
     DBLockService.LockSpecification lockSpecification = new DBLockService.LockSpecification(new DBLockService.TableSpec("table1"),

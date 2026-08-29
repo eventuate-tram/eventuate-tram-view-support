@@ -1,7 +1,7 @@
 package io.eventuate.tram.viewsupport.rebuild;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 
@@ -14,7 +14,7 @@ public class DBLockServiceMySqlQueryTest {
     DBLockService.LockSpecification lockSpecification = new DBLockService.LockSpecification(mainTableSpec, DBLockService.LockType.READ);
     String query = dbLockService.buildMySqlLockQuery(lockSpecification);
 
-    Assert.assertEquals("lock tables TestTable1 read;", query);
+    Assertions.assertEquals("lock tables TestTable1 read;", query);
   }
 
   @Test
@@ -24,7 +24,7 @@ public class DBLockServiceMySqlQueryTest {
     DBLockService.LockSpecification lockSpecification = new DBLockService.LockSpecification(mainTableSpec, DBLockService.LockType.WRITE);
     String query = dbLockService.buildMySqlLockQuery(lockSpecification);
 
-    Assert.assertEquals("lock tables TestTable1 t1 write;", query);
+    Assertions.assertEquals("lock tables TestTable1 t1 write;", query);
   }
 
   @Test
@@ -37,7 +37,7 @@ public class DBLockServiceMySqlQueryTest {
             Collections.singletonMap(additionalTableSpec, DBLockService.LockType.READ));
     String query = dbLockService.buildMySqlLockQuery(lockSpecification);
 
-    Assert.assertEquals("lock tables TestTable1 read, TestTable2 read;", query);
+    Assertions.assertEquals("lock tables TestTable1 read, TestTable2 read;", query);
   }
 
   @Test
@@ -50,6 +50,6 @@ public class DBLockServiceMySqlQueryTest {
             Collections.singletonMap(additionalTableSpec, DBLockService.LockType.READ));
     String query = dbLockService.buildMySqlLockQuery(lockSpecification);
 
-    Assert.assertEquals("lock tables TestTable1 t1 read, TestTable2 t2 read;", query);
+    Assertions.assertEquals("lock tables TestTable1 t1 read, TestTable2 t2 read;", query);
   }
 }

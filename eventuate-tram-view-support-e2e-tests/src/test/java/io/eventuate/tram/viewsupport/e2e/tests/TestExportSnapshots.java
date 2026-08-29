@@ -3,13 +3,11 @@ package io.eventuate.tram.viewsupport.e2e.tests;
 import io.eventuate.tram.viewsupport.rebuild.DomainSnapshotExportService;
 import io.eventuate.tram.viewsupport.rebuild.SnapshotMetadata;
 import io.eventuate.util.test.async.Eventually;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
@@ -18,7 +16,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-@RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = EventuateTramViewSupportE2ETestConfiguration.class,
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class TestExportSnapshots {
@@ -60,15 +57,15 @@ public class TestExportSnapshots {
     SnapshotMetadata[] snapshotMetadata = restTemplate.postForObject(String.format("http://localhost:%s/export/test-domain-entity", port), null, SnapshotMetadata[].class);
 
     for (SnapshotMetadata meta : snapshotMetadata) {
-      Assert.assertTrue(meta.getOffset() > 0);
-      Assert.assertEquals(TestDomainEntity.class.getName(), meta.getTopic());
+      Assertions.assertTrue(meta.getOffset() > 0);
+      Assertions.assertEquals(TestDomainEntity.class.getName(), meta.getTopic());
     }
 
     Eventually.eventually(() -> {
       List<TestDomainEntityView> views = testDomainEntityViewRepository.findAll();
       Set<String> viewData = views.stream().map(TestDomainEntityView::getData).collect(Collectors.toSet());
       viewData.retainAll(originalData);
-      Assert.assertEquals(originalData, viewData);
+      Assertions.assertEquals(originalData, viewData);
     });
   }
 

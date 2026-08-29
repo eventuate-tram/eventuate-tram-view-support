@@ -1,6 +1,6 @@
 package io.eventuate.tram.viewsupport.rebuild;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name="testentity")

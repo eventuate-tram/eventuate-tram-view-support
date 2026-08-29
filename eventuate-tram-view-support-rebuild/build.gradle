@@ -1,16 +1,17 @@
 
 dependencies {
+    api "org.springframework.boot:spring-boot-starter-webmvc:$springBootVersion"
+    api "org.springframework.boot:spring-boot-starter-data-jpa:$springBootVersion"
+
     implementation "io.eventuate.messaging.kafka:eventuate-messaging-kafka-spring-producer:$eventuateMessagingKafkaVersion"
     implementation "io.eventuate.tram.core:eventuate-tram-spring-jdbc-kafka:$eventuateTramVersion"
     implementation "io.eventuate.tram.core:eventuate-tram-spring-events:$eventuateTramVersion"
     implementation "io.eventuate.tram.core:eventuate-tram-messaging-producer-common:$eventuateTramVersion"
-    implementation "commons-lang:commons-lang:2.6"
-    implementation "org.springframework.boot:spring-boot-starter-web:$springBootVersion"
-    implementation "org.springframework.boot:spring-boot-starter-data-jpa:$springBootVersion"
-    implementation 'javax.el:javax.el-api:3.0.0'
-    implementation 'commons-beanutils:commons-beanutils:1.8.3'
+    implementation "org.apache.commons:commons-lang3:$commonsLang3Version"
+    implementation "commons-beanutils:commons-beanutils:$commonsBeanutilsVersion"
 
-    testImplementation 'org.mockito:mockito-all:1.10.19'
-    testImplementation "junit:junit:4.12"
-    testImplementation "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
+    testImplementation "org.springframework.boot:spring-boot-starter-data-jpa-test:$springBootVersion"
+    testImplementation "org.springframework.boot:spring-boot-starter-jdbc-test:$springBootVersion"
+    testRuntimeOnly "com.mysql:mysql-connector-j:$mysqlVersion"
+    testRuntimeOnly "org.postgresql:postgresql:$postgresqlVersion"
 }

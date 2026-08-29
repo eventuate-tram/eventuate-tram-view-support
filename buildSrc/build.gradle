@@ -2,10 +2,4 @@ test.enabled=false
 
 repositories {
     mavenCentral()
-    jcenter()
 }
-
-dependencies {
-    implementation "com.jayway.restassured:rest-assured:2.9.0"
-}
-

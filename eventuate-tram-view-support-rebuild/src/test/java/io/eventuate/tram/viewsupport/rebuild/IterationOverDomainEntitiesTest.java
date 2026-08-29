@@ -1,9 +1,8 @@
 package io.eventuate.tram.viewsupport.rebuild;
 
 import io.eventuate.common.spring.jdbc.EventuateCommonJdbcOperationsConfiguration;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -12,11 +11,9 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-@RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = IterationOverDomainEntitiesTest.Config.class,
         webEnvironment = SpringBootTest.WebEnvironment.NONE)
 public class IterationOverDomainEntitiesTest {
@@ -84,7 +81,7 @@ public class IterationOverDomainEntitiesTest {
     AtomicInteger counter = new AtomicInteger(0);
     domainSnapshotExportService.iterateOverAllDomainEntities(testEntity -> counter.incrementAndGet());
 
-    Assert.assertEquals(elements, counter.get());
+    Assertions.assertEquals(elements, counter.get());
     testRepository.deleteAll();
   }
 }

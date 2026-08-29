@@ -2,10 +2,10 @@ package io.eventuate.tram.viewsupport.rebuild;
 
 import org.hibernate.Session;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.internal.SessionFactoryImpl;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 public class DBDialectDeterminer {
   @Autowired
@@ -13,6 +13,6 @@ public class DBDialectDeterminer {
 
   Dialect getDialect() {
     Session session = (Session) entityManager.getDelegate();
-    return ((SessionFactoryImpl)session.getSessionFactory()).getDialect();
+    return session.getSessionFactory().unwrap(SessionFactoryImplementor.class).getJdbcServices().getDialect();
   }
 }

@@ -1,6 +1,7 @@
 package io.eventuate.tram.viewsupport.e2e.tests;
 
+import org.springframework.data.repository.ListCrudRepository;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
-public interface TestDomainEntityRepository extends PagingAndSortingRepository<TestDomainEntity, Long> {
+public interface TestDomainEntityRepository extends PagingAndSortingRepository<TestDomainEntity, Long>, ListCrudRepository<TestDomainEntity, Long> {
 }

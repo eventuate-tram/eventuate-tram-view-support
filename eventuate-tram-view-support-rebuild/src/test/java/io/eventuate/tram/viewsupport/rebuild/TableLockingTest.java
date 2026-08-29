@@ -1,8 +1,8 @@
 package io.eventuate.tram.viewsupport.rebuild;
 
 import io.eventuate.common.spring.jdbc.EventuateCommonJdbcOperationsConfiguration;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -11,12 +11,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.concurrent.*;
 import java.util.function.Supplier;
 
-@RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = TableLockingTest.Config.class, webEnvironment = SpringBootTest.WebEnvironment.NONE)
 public class TableLockingTest {
 
@@ -42,9 +40,10 @@ public class TableLockingTest {
   @Autowired
   private TestRepository testRepository;
 
-  @Test(expected = TimeoutException.class)
-  public void checkThatQueryHangsWhenTableIsLocked() throws TimeoutException {
-    testLock(10000, () -> testRepository.save(new TestEntity()));
+  @Test
+  public void checkThatQueryHangsWhenTableIsLocked() {
+    Assertions.assertThrows(TimeoutException.class,
+            () -> testLock(10000, () -> testRepository.save(new TestEntity())));
   }
 
   @Test

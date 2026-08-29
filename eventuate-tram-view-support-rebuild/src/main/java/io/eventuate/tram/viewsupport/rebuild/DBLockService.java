@@ -1,12 +1,12 @@
 package io.eventuate.tram.viewsupport.rebuild;
 
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.PostgreSQL82Dialect;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.annotation.Transactional;
 
-import javax.transaction.Transactional;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -39,7 +39,7 @@ public class DBLockService {
   }
 
   private boolean isPostgres() {
-    return dbDialectDeterminer.getDialect() instanceof PostgreSQL82Dialect;
+    return dbDialectDeterminer.getDialect() instanceof PostgreSQLDialect;
   }
 
   String createLockQuery(LockSpecification lockSpecification) {

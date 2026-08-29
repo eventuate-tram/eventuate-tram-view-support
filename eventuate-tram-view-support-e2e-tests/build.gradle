@@ -2,12 +2,15 @@
 dependencies {
     implementation project(":eventuate-tram-view-support-rebuild")
     implementation "org.springframework.boot:spring-boot-starter-data-mongodb:$springBootVersion"
-    implementation "org.springframework.boot:spring-boot-starter-web:$springBootVersion"
+    implementation "org.springframework.boot:spring-boot-starter-webmvc:$springBootVersion"
     implementation "io.eventuate.tram.core:eventuate-tram-spring-events:$eventuateTramVersion"
     implementation "org.springframework.boot:spring-boot-starter-data-jpa:$springBootVersion"
     implementation "io.eventuate.tram.core:eventuate-tram-spring-jdbc-kafka:$eventuateTramVersion"
 
     testImplementation "io.eventuate.util:eventuate-util-test:$eventuateUtilVersion"
-    testImplementation "junit:junit:4.12"
-    testImplementation "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
+    testImplementation "org.springframework.boot:spring-boot-starter-data-jpa-test:$springBootVersion"
+    testImplementation "org.springframework.boot:spring-boot-starter-data-mongodb-test:$springBootVersion"
+    testImplementation "org.springframework.boot:spring-boot-starter-webmvc-test:$springBootVersion"
+    testRuntimeOnly "com.mysql:mysql-connector-j:$mysqlVersion"
+    testRuntimeOnly "org.postgresql:postgresql:$postgresqlVersion"
 }

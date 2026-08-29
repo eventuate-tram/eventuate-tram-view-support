@@ -1,6 +1,6 @@
 package io.eventuate.tram.viewsupport.e2e.tests;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name="testdomainentity")
